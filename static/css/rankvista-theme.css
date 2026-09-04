@@ -614,3 +614,116 @@
 :root[data-theme="dark"] .rv-cell--choice::before {
   border-color: transparent #f2f4f8 transparent transparent;
 }
+
+/* ----------------------------------------------------------- niche sales */
+/* The chart is a section of its own, so it clears the KPI strip beneath it. */
+.rv-niche { margin-bottom: 14px; }
+.rv-niche__unit {
+  display: inline-flex;
+  align-items: center;
+  height: 26px;
+  padding: 0 9px;
+  border-radius: var(--rv-radius);
+  background: var(--rv-surface-sunken);
+  color: var(--rv-text-muted);
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.rv-niche__years {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 12px 13px 4px;
+}
+.rv-year-chip {
+  --chip: var(--rv-accent);
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  height: 30px;
+  padding: 0 11px 0 8px;
+  border-radius: var(--rv-radius);
+  background: var(--chip);
+  color: #fff;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  user-select: none;
+  transition: opacity 0.12s ease, filter 0.12s ease;
+}
+.rv-year-chip input { position: absolute; opacity: 0; width: 0; height: 0; }
+.rv-year-chip__box {
+  display: grid;
+  place-items: center;
+  width: 15px;
+  height: 15px;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.28);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.5);
+}
+.rv-year-chip__box svg { width: 11px; height: 11px; color: #fff; }
+/* An unchecked year fades out and drops its tick. */
+.rv-year-chip:has(input:not(:checked)) { opacity: 0.4; filter: grayscale(0.5); }
+.rv-year-chip:has(input:not(:checked)) .rv-year-chip__box svg { visibility: hidden; }
+.rv-year-chip:has(input:focus-visible) { outline: 2px solid var(--rv-accent); outline-offset: 2px; }
+
+.rv-niche__plot {
+  position: relative;
+  padding: 6px 13px 26px;
+}
+.rv-niche__plot svg { display: block; width: 100%; height: 300px; cursor: crosshair; }
+
+.rv-chart__grid { stroke: var(--rv-border); stroke-width: 1; }
+.rv-chart__axis { stroke: var(--rv-border-strong); stroke-width: 1; }
+
+/* The label layer sits over the plot in the same percentage space as the viewBox. */
+.rv-chart__labels {
+  position: absolute;
+  inset: 6px 13px 26px;
+  pointer-events: none;
+}
+.rv-chart__ylabel {
+  position: absolute;
+  right: calc(100% - var(--axis) + 8px);
+  transform: translateY(-50%);
+  color: var(--rv-text-subtle);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.rv-chart__xlabel {
+  position: absolute;
+  bottom: -20px;
+  transform: translateX(-50%);
+  color: var(--rv-text-muted);
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+.rv-chart__line {
+  fill: none;
+  stroke-width: 2;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+  transition: opacity 0.12s ease;
+}
+.rv-chart__line.is-hidden { display: none; }
+.rv-chart__cursor {
+  stroke: var(--rv-border-strong);
+  stroke-width: 1;
+  stroke-dasharray: 3 3;
+  opacity: 0;
+}
+.rv-chart__cursor.is-visible { opacity: 1; }
+.rv-chart__marker { stroke: var(--rv-surface); stroke-width: 2; }
+
+/* Dimming the other lines makes the hovered year readable in a dense chart. */
+.rv-niche__plot svg.is-hovering .rv-chart__line { opacity: 0.28; }
+.rv-niche__plot svg.is-hovering .rv-chart__line.is-focused { opacity: 1; }
+
+@media (max-width: 760px) {
+  .rv-niche__plot svg { height: 210px; }
+  .rv-niche .rv-card__header { flex-wrap: wrap; gap: 8px; }
+}

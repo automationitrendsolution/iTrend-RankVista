@@ -7,6 +7,12 @@
   {% include "projects/partials/date_controls.html" %}
 </div>
 
+{% if selected_asin and overview %}
+  {% include "projects/partials/rank_overview.html" %}
+{% endif %}
+
+{% include "projects/partials/niche_sales.html" %}
+
 {% if not selected_asin or not overview %}
   <div class="rv-table-wrap">
     <div class="rv-empty">
@@ -16,7 +22,6 @@
     </div>
   </div>
 {% else %}
-  {% include "projects/partials/rank_overview.html" %}
   <div id="rv-trend-results">
     {% include "projects/partials/trend_panels.html" %}
   </div>

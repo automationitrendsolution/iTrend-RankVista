@@ -1,0 +1,85 @@
+{% load rv humanize %}
+{% comment %}Total unit sales in the niche, one line per year.
+Every series comes from the warehouse; a year with no table simply is not drawn.{% endcomment %}
+<div class="rv-table-wrap rv-niche">
+  <div class="rv-card__header">
+    <div style="display:flex;align-items:center;gap:7px;min-width:0">
+      <h2>Total sales in the niche</h2>
+      <svg aria-hidden="true" width="14" height="14" style="color:var(--rv-text-subtle)"
+           title="Units sold across the niche each month, from the warehouse sales tables"><use href="#rv-i-info"></use></svg>
+    </div>
+
+    <div style="display:flex;align-items:center;gap:8px">
+      <span class="rv-niche__unit">{{ sales.interval|capfirst }} units</span>
+      <div class="rv-segment" role="group" aria-label="Sales scope">
+        <a href="{% qs sales_scope='niche' %}" class="{% if sales_scope == 'niche' %}is-active{% endif %}"
+           hx-get="{% qs sales_scope='niche' %}" hx-target="#rv-tab-panel" hx-swap="innerHTML"
+           hx-push-url="true" data-rv-skeleton="panel" title="Every ASIN in the niche">Niche</a>
+        <a href="{% qs sales_scope='tracked' %}" class="{% if sales_scope == 'tracked' %}is-active{% endif %}"
+           hx-get="{% qs sales_scope='tracked' %}" hx-target="#rv-tab-panel" hx-swap="innerHTML"
+           hx-push-url="true" data-rv-skeleton="panel" title="Only ASINs this project tracks">Tracked</a>
+      </div>
+    </div>
+  </div>
+
+  {% if chart.has_data %}
+    <div class="rv-niche__years">
+      {% for row in chart.series %}
+        <label class="rv-year-chip" style="--chip:{{ row.color }}" title="{{ row.total|intcomma }} units in {{ row.name }}">
+          <input type="checkbox" checked data-rv-series="{{ row.name }}">
+          <span class="rv-year-chip__box" aria-hidden="true">
+            <svg><use href="#rv-i-check"></use></svg>
+          </span>
+          <span>{{ row.name }}</span>
+        </label>
+      {% endfor %}
+    </div>
+
+    <div class="rv-niche__plot" style="--axis:{{ chart.left_pct }}%">
+      <svg viewBox="0 0 {{ chart.width }} {{ chart.height }}" preserveAspectRatio="none"
+           role="img" aria-label="Total unit sales in the niche by {{ sales.interval }}"
+           data-rv-line-chart>
+        {% for tick in chart.y_ticks %}
+          <line class="rv-chart__grid" x1="{{ chart.plot_left }}" x2="{{ chart.plot_right }}"
+                y1="{{ tick.y }}" y2="{{ tick.y }}"/>
+        {% endfor %}
+
+        <line class="rv-chart__axis" x1="{{ chart.plot_left }}" x2="{{ chart.plot_left }}"
+              y1="{{ chart.plot_top }}" y2="{{ chart.plot_bottom }}"/>
+
+        {% for row in chart.series %}
+          <path class="rv-chart__line" data-series="{{ row.name }}" d="{{ row.path }}"
+                stroke="{{ row.color }}" data-points="{{ row.hover }}"
+                vector-effect="non-scaling-stroke"/>
+        {% endfor %}
+
+        <line class="rv-chart__cursor" y1="{{ chart.plot_top }}" y2="{{ chart.plot_bottom }}"
+              vector-effect="non-scaling-stroke"/>
+      </svg>
+
+      {% comment %}Labels live in HTML so they stay crisp while the SVG stretches.{% endcomment %}
+      <div class="rv-chart__labels" aria-hidden="true">
+        {% for tick in chart.y_ticks %}
+          <span class="rv-chart__ylabel" style="top:{{ tick.pct }}%">{{ tick.label }}</span>
+        {% endfor %}
+        {% for tick in chart.x_ticks %}
+          <span class="rv-chart__xlabel" style="left:{{ tick.pct }}%">{{ tick.label }}</span>
+        {% endfor %}
+      </div>
+    </div>
+
+  {% else %}
+    <div class="rv-empty">
+      <div class="rv-empty__icon"><svg aria-hidden="true"><use href="#rv-i-trend"></use></svg></div>
+      <h3>No niche sales history</h3>
+      <p>
+        {% if sales_scope == 'tracked' %}
+          None of this project's ASINs appear in the niche sales tables. Switch to Niche
+          to see the category total.
+        {% else %}
+          The warehouse holds no unit-sales history for the configured years.
+        {% endif %}
+      </p>
+    </div>
+  {% endif %}
+</div>

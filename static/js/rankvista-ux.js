@@ -268,6 +268,104 @@
     });
   }
 
+  /* ---------------------------------------------- niche line chart */
+  function initLineChart(svg) {
+    var lines = [].slice.call(svg.querySelectorAll(".rv-chart__line"));
+    if (!lines.length) return;
+
+    var cursor = svg.querySelector(".rv-chart__cursor");
+    var markers = {};
+    lines.forEach(function (line) {
+      var dot = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+      dot.setAttribute("class", "rv-chart__marker");
+      dot.setAttribute("r", "4");
+      dot.setAttribute("fill", line.getAttribute("stroke"));
+      dot.style.opacity = "0";
+      svg.appendChild(dot);
+      markers[line.dataset.series] = dot;
+      try {
+        line._rvPoints = JSON.parse(line.dataset.points || "[]");
+      } catch (e) {
+        line._rvPoints = [];
+      }
+    });
+
+    var box = svg.viewBox.baseVal;
+
+    function onMove(event) {
+      var rect = svg.getBoundingClientRect();
+      var vx = ((event.clientX - rect.left) / rect.width) * box.width;
+
+      // Every series shares one bucket grid, so pick the bucket once and read
+      // each line at that index. A line without that bucket simply drops out.
+      var target = null;
+      var best = Infinity;
+      var visible = lines.filter(function (line) {
+        return !line.classList.contains("is-hidden") && line._rvPoints.length;
+      });
+      visible.forEach(function (line) {
+        line._rvPoints.forEach(function (point) {
+          var distance = Math.abs(point.x - vx);
+          if (distance < best) { best = distance; target = point; }
+        });
+      });
+      if (!target) return;
+
+      var rows = [];
+      var cursorX = target.x;
+      lines.forEach(function (line) {
+        var dot = markers[line.dataset.series];
+        var point = null;
+        if (visible.indexOf(line) !== -1) {
+          for (var i = 0; i < line._rvPoints.length; i += 1) {
+            if (line._rvPoints[i].i === target.i) { point = line._rvPoints[i]; break; }
+          }
+        }
+        if (!point) { dot.style.opacity = "0"; return; }
+        dot.setAttribute("cx", point.x);
+        dot.setAttribute("cy", point.y);
+        dot.style.opacity = "1";
+        rows.push({ series: point.series, value: point.value,
+                    color: line.getAttribute("stroke") });
+      });
+
+      cursor.setAttribute("x1", cursorX);
+      cursor.setAttribute("x2", cursorX);
+      cursor.classList.add("is-visible");
+
+      rows.sort(function (a, b) { return b.value - a.value; });
+      var html = '<span class="rv-tooltip__date">' + target.label + "</span>";
+      rows.forEach(function (row) {
+        html += '<span class="rv-tooltip__row"><i style="background:' + row.color + '"></i>' +
+                row.series + "<b>" + row.value.toLocaleString() + "</b></span>";
+      });
+      RV.showTooltip(html, event.clientX, rect.top + 40);
+    }
+
+    function onLeave() {
+      cursor.classList.remove("is-visible");
+      Object.keys(markers).forEach(function (key) { markers[key].style.opacity = "0"; });
+      RV.hideTooltip();
+    }
+
+    svg.addEventListener("mousemove", onMove);
+    svg.addEventListener("mouseleave", onLeave);
+    svg.setAttribute("data-rv-bound", "1");
+
+    // The year chips show and hide their own series.
+    var root = svg.closest(".rv-niche");
+    if (root && !root.dataset.rvBound) {
+      root.dataset.rvBound = "1";
+      $(root).on("change", "[data-rv-series]", function () {
+        var name = this.dataset.rvSeries;
+        var line = svg.querySelector('.rv-chart__line[data-series="' + name + '"]');
+        if (line) line.classList.toggle("is-hidden", !this.checked);
+        var dot = markers[name];
+        if (dot && !this.checked) dot.style.opacity = "0";
+      });
+    }
+  }
+
   function initCharts(scope) {
     var root = scope || document;
     root.querySelectorAll(".rv-kpi__chart[data-points]").forEach(function (chart) {
@@ -275,6 +373,9 @@
     });
     root.querySelectorAll(".rv-dist__col[data-buckets]").forEach(function (column) {
       if (!column.getAttribute("data-rv-bound")) initDistribution(column);
+    });
+    root.querySelectorAll("[data-rv-line-chart]").forEach(function (svg) {
+      if (!svg.getAttribute("data-rv-bound")) initLineChart(svg);
     });
     initMatrixHover(root);
   }

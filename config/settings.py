@@ -173,6 +173,18 @@ SOURCE_DB = {
         "categories": env("SOURCE_DB_CATEGORY_TABLE", "datarova_asin_category"),
         "sync_log": env("SOURCE_DB_SYNC_TABLE", "datarova_sync_log"),
     },
+    # Niche unit-sales history, one table per year: "2025:2025Windshield,...".
+    # Adding a year is configuration, not code.
+    "SALES_TABLES": {
+        year.strip(): table.strip()
+        for year, _, table in (
+            pair.partition(":")
+            for pair in env(
+                "SOURCE_DB_SALES_TABLES", "2025:2025Windshield,2026:2026Windshield"
+            ).split(",")
+        )
+        if year.strip() and table.strip()
+    },
 }
 
 # Cache: Redis, degrading to local memory when unreachable.

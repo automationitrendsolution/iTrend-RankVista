@@ -3,7 +3,11 @@ Nothing here performs a database query; formatting only."""
 
 from __future__ import annotations
 
+from pathlib import Path
+
 from django import template
+from django.conf import settings
+from django.templatetags.static import static
 from django.utils.html import format_html
 from django.utils.safestring import mark_safe
 
@@ -11,6 +15,20 @@ from apps.common.constants import marketplace as marketplace_meta
 from apps.common.pagination import querystring as build_querystring
 
 register = template.Library()
+
+
+@register.simple_tag
+def asset(path: str) -> str:
+    """Static URL stamped with the file mtime so edits land without a hard reload.
+    Production hashes filenames already, so the stamp is only added in DEBUG."""
+    url = static(path)
+    if not settings.DEBUG:
+        return url
+    for root in settings.STATICFILES_DIRS:
+        candidate = Path(root) / path
+        if candidate.exists():
+            return f"{url}?v={int(candidate.stat().st_mtime)}"
+    return url
 
 
 @register.simple_tag(takes_context=True)

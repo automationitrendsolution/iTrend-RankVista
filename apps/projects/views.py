@@ -13,6 +13,8 @@ from django.urls import reverse
 from django.views.decorators.http import require_POST
 
 from apps.accounts.permissions import login_required, page_required
+from apps.analytics import charts as chart_builder
+from apps.analytics import sales as sales_service
 from apps.analytics import services as analytics
 from apps.asins import repositories as asin_repo
 from apps.common import filters as qp
@@ -390,6 +392,25 @@ def project_trends(request: HttpRequest, project_id: int) -> HttpResponse:
             "window_label": format_window_label(window),
             "range_presets": DATE_RANGE_PRESETS,
             "intervals": INTERVALS,
+        }
+    )
+
+    # Niche unit-sales history, one line per year. It covers the whole niche, so it
+    # is built before the ASIN guard below and stays useful with nothing selected.
+    # The warehouse dates these rows to the start of a month, so monthly is the only
+    # bucket that draws a continuous line.
+    tracked = tuple(sorted(option["asin"] for option in context["asin_options"]))
+    sales_scope = qp.get_str(request, "sales_scope", "niche", allowed={"niche", "tracked"})
+    if sales_scope == "tracked" and not tracked:
+        sales_scope = "niche"
+    sales = sales_service.niche_sales(
+        asins=tracked if sales_scope == "tracked" else ()
+    )
+    context.update(
+        {
+            "sales": sales,
+            "sales_scope": sales_scope,
+            "chart": chart_builder.build(labels=sales["labels"], series=sales["years"]),
         }
     )
 
