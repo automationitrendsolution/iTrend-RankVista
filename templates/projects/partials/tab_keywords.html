@@ -28,7 +28,7 @@
 {% else %}
   <form class="rv-toolbar" method="get" role="search"
         hx-get="{% url 'projects:keywords' project.project_id %}" hx-target="#rv-keyword-results" hx-push-url="true"
-        hx-trigger="submit, input from:#rv-keyword-search delay:350ms, change from:select">
+        hx-trigger="submit, input from:#rv-keyword-search delay:350ms, change from:find select">
     <div class="rv-search">
       <svg aria-hidden="true"><use href="#rv-i-search"></use></svg>
       <input type="search" class="rv-input" id="rv-keyword-search" name="kq" value="{{ search }}"

@@ -4,8 +4,7 @@
     {% include "projects/partials/project_menu.html" with project=project %}
   </div>
 
-  <a class="rv-project-card__link" href="{% url 'projects:detail' project.project_id %}"
-     hx-get="{% url 'projects:quickview' project.project_id %}" hx-target="#rv-modal-root"
+  <a class="rv-project-card__link" href="{% url 'projects:ranks' project.project_id %}"
      aria-label="Open {{ project.name }}"></a>
 
   {% comment %}The placeholder sits underneath; a failed image removes itself.{% endcomment %}

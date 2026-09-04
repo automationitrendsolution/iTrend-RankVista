@@ -9,6 +9,8 @@ from pathlib import Path
 from django_mongodb_backend import parse_uri
 from dotenv import load_dotenv
 
+from apps.common.uris import with_credentials
+
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # The encryption key lives outside .env so the credential file alone is useless.
@@ -120,7 +122,12 @@ WSGI_APPLICATION = "config.wsgi.application"
 
 # MongoDB is the only datastore: Django ORM (auth, sessions, audit) runs on the
 # official django-mongodb-backend; analytics collections use the repositories.
-MONGODB_URI = env_secret("MONGODB_URI", "mongodb://127.0.0.1:27017/")
+# The URI stays credential-free and readable; the password is its own encrypted value.
+MONGODB_URI = with_credentials(
+    env("MONGODB_URI", "mongodb://127.0.0.1:27017/"),
+    env("MONGODB_USERNAME"),
+    env_secret("MONGODB_PASSWORD"),
+)
 MONGODB_DATABASE = env("MONGODB_DATABASE", "rankvista")
 
 DATABASES = {
@@ -168,7 +175,11 @@ SOURCE_DB = {
 }
 
 # Cache: Redis, degrading to local memory when unreachable.
-REDIS_URL = env_secret("REDIS_URL", "redis://127.0.0.1:6379/0")
+REDIS_URL = with_credentials(
+    env("REDIS_URL", "redis://127.0.0.1:6379/0"),
+    env("REDIS_USERNAME"),
+    env_secret("REDIS_PASSWORD"),
+)
 CACHE_TIMEOUT_SECONDS = env_int("CACHE_TIMEOUT_SECONDS", 300)
 
 if REDIS_URL:

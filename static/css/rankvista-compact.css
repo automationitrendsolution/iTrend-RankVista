@@ -70,9 +70,10 @@ h3 { font-size: 13px; }
 }
 .rv-btn--ghost { box-shadow: none; }
 .rv-btn--sm { height: var(--rv-control-h-sm); padding: 0 8px; font-size: 11.5px; }
-.rv-btn--icon { width: var(--rv-control-h); }
-.rv-btn--icon.rv-btn--sm { width: var(--rv-control-h-sm); }
-.rv-btn svg { width: 14px; height: 14px; }
+.rv-btn--icon { width: var(--rv-control-h); padding: 0; }
+.rv-btn--icon.rv-btn--sm { width: var(--rv-control-h-sm); padding: 0; }
+/* Icons are flex items: without this they shrink instead of keeping their size. */
+.rv-btn svg { width: 14px; height: 14px; flex-shrink: 0; }
 
 .rv-input, .rv-select {
   height: var(--rv-control-h);
@@ -218,10 +219,12 @@ h3 { font-size: 13px; }
 /* ------------------------------------------------------------------ icons */
 /* Icons were sized down with the type scale and became hard to read; these
    restore a legible 16-18px target while the surrounding chrome stays compact. */
-.rv-btn svg { width: 16px; height: 16px; }
+.rv-btn svg { width: 16px; height: 16px; flex-shrink: 0; }
 .rv-btn--sm svg { width: 15px; height: 15px; }
-.rv-btn--icon svg { width: 17px; height: 17px; }
+.rv-btn--icon { padding: 0; }
+.rv-btn--icon svg { width: 18px; height: 18px; }
 .rv-btn--icon.rv-btn--sm svg { width: 16px; height: 16px; }
+.rv-nav__item svg, .rv-dropdown__item svg, .rv-tab svg { flex-shrink: 0; }
 
 .rv-nav__item svg { width: 18px; height: 18px; }
 .rv-search svg { width: 15px; height: 15px; left: 10px; }
@@ -414,3 +417,7 @@ code {
   padding: 1px 5px;
   border-radius: var(--rv-radius-sm);
 }
+
+/* Whole list rows open the project, so signal that they are clickable. */
+.rv-row-link { cursor: pointer; }
+.rv-row-link:hover { background: var(--rv-surface-alt); }

@@ -42,8 +42,9 @@
 
   <div class="rv-pagination__size">
     <label for="rv-page-size">Rows per page</label>
-    <select class="rv-select" id="rv-page-size"
-            onchange="window.location.href=this.options[this.selectedIndex].dataset.url">
+    {% comment %}Each option carries the full query string, so filters survive.{% endcomment %}
+    <select class="rv-select" id="rv-page-size" data-rv-page-size
+            {% if target %}data-rv-target="{{ target }}" data-rv-skeleton="table"{% endif %}>
       {% for choice in page_obj.size_choices %}
         <option value="{{ choice }}" data-url="{% qs size=choice page=1 %}" {% if choice == page_obj.size %}selected{% endif %}>{{ choice }}</option>
       {% endfor %}

@@ -239,6 +239,29 @@
     });
   }
 
+  /* ------------------------------------------- rows per page */
+  function initPageSize() {
+    // Each option holds the full query string, so changing size keeps every filter.
+    $(document).on("change", "[data-rv-page-size]", function () {
+      var url = this.options[this.selectedIndex].dataset.url;
+      if (!url) return;
+      var target = this.getAttribute("data-rv-target");
+      if (!target || !window.htmx) {
+        window.location.href = url;
+        return;
+      }
+      var kind = this.getAttribute("data-rv-skeleton");
+      var node = document.querySelector(target);
+      if (node && kind) {
+        var html = skeletonHtml(kind);
+        if (html) node.innerHTML = html;
+      }
+      window.htmx.ajax("GET", url, { target: target, swap: "innerHTML" }).then(function () {
+        window.history.pushState({}, "", url);
+      });
+    });
+  }
+
   function initCharts(scope) {
     var root = scope || document;
     root.querySelectorAll(".rv-kpi__chart[data-points]").forEach(function (chart) {
@@ -255,6 +278,7 @@
   $(function () {
     initSkeletons();
     initProgressBar();
+    initPageSize();
     initCharts();
   });
 })(window.jQuery);

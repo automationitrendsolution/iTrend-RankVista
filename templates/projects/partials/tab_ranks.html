@@ -2,10 +2,14 @@
 {% comment %}Body of the ranks tab. Swapped into #rv-tab-panel by HTMX.{% endcomment %}
 
 <div class="rv-subtabs">
-  <a class="rv-subtab is-active" href="{% qs %}">Ranks Matrix</a>
-  <a class="rv-subtab" href="{% url 'projects:keywords' project.project_id %}?asin={{ selected_asin }}">Ranks by Keyword</a>
-  <a class="rv-subtab" href="{% url 'projects:asins' project.project_id %}?asin={{ selected_asin }}">Ranks by ASIN</a>
-  <a class="rv-subtab" href="{% url 'projects:trends' project.project_id %}?asin={{ selected_asin }}">Trends</a>
+  <a class="rv-subtab is-active" href="{% qs %}"
+     hx-get="{% qs %}" hx-target="#rv-tab-panel" hx-swap="innerHTML" hx-push-url="true" data-rv-skeleton="panel">Ranks Matrix</a>
+  <a class="rv-subtab" href="{% url 'projects:keywords' project.project_id %}?asin={{ selected_asin }}"
+     hx-get="{% url 'projects:keywords' project.project_id %}?asin={{ selected_asin }}" hx-target="#rv-tab-panel" hx-swap="innerHTML" hx-push-url="true" data-rv-skeleton="panel">Ranks by Keyword</a>
+  <a class="rv-subtab" href="{% url 'projects:asins' project.project_id %}?asin={{ selected_asin }}"
+     hx-get="{% url 'projects:asins' project.project_id %}?asin={{ selected_asin }}" hx-target="#rv-tab-panel" hx-swap="innerHTML" hx-push-url="true" data-rv-skeleton="panel">Ranks by ASIN</a>
+  <a class="rv-subtab" href="{% url 'projects:trends' project.project_id %}?asin={{ selected_asin }}"
+     hx-get="{% url 'projects:trends' project.project_id %}?asin={{ selected_asin }}" hx-target="#rv-tab-panel" hx-swap="innerHTML" hx-push-url="true" data-rv-skeleton="panel">Trends</a>
 </div>
 
 <div class="rv-toolbar">
@@ -30,7 +34,7 @@
 
   <form class="rv-toolbar" method="get" role="search"
         hx-get="{% url 'projects:ranks' project.project_id %}" hx-target="#rv-rank-results" hx-push-url="true"
-        hx-trigger="submit, input from:#rv-rank-search delay:350ms, change from:select, change from:input[type=number]">
+        hx-trigger="submit, input from:#rv-rank-search delay:350ms, change from:find select, change from:find input[type=number]">
     <div class="rv-search">
       <svg aria-hidden="true"><use href="#rv-i-search"></use></svg>
       <input type="search" class="rv-input" id="rv-rank-search" name="kq" value="{{ search }}"

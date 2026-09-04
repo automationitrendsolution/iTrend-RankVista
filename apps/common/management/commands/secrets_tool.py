@@ -12,11 +12,11 @@ from django.core.management.base import BaseCommand, CommandError
 from apps.common import secrets
 
 MANAGED_VARS = (
-    "MONGODB_URI",
-    "REDIS_URL",
-    "SOURCE_DB_PASSWORD",
-    "APP_ADMIN_PASSWORD",
+    "MONGODB_PASSWORD",
     "MONGO_ROOT_PASSWORD",
+    "APP_ADMIN_PASSWORD",
+    "REDIS_PASSWORD",
+    "SOURCE_DB_PASSWORD",
 )
 
 
@@ -72,6 +72,7 @@ class Command(BaseCommand):
         self.stdout.write(self.style.MIGRATE_HEADING("Resolved configuration (masked)"))
         rows = [
             ("MongoDB URI", secrets.mask_uri(settings.MONGODB["URI"])),
+            ("MongoDB user", os.environ.get("MONGODB_USERNAME") or "(none)"),
             ("MongoDB database", settings.MONGODB["DATABASE"]),
             ("Redis URL", secrets.mask_uri(settings.REDIS_URL)),
             ("Warehouse host", settings.SOURCE_DB["HOST"] or "(not set)"),

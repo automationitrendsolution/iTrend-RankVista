@@ -39,7 +39,7 @@
         </thead>
         <tbody>
           {% for project in page_obj.items %}
-          <tr>
+          <tr class="rv-row-link" data-href="{% url 'projects:ranks' project.project_id %}">
             <td>
               <div style="display:flex;align-items:center;gap:10px">
                 <span class="rv-thumb rv-thumb-wrap">
@@ -50,8 +50,7 @@
                          onerror="this.remove()">
                   {% endif %}
                 </span>
-                <a href="{% url 'projects:detail' project.project_id %}"
-                   hx-get="{% url 'projects:quickview' project.project_id %}" hx-target="#rv-modal-root"
+                <a href="{% url 'projects:ranks' project.project_id %}"
                    style="font-weight:600;color:var(--rv-text)">{{ project.name }}</a>
               </div>
             </td>

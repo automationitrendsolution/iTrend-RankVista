@@ -2,7 +2,8 @@
 {% comment %}Interval toggle and date-range preset picker, both URL-driven.{% endcomment %}
 <div class="rv-segment" role="group" aria-label="Reporting interval">
   {% for option in intervals %}
-    <a href="{% qs interval=option page=1 %}" class="{% if window.interval == option %}is-active{% endif %}">
+    <a href="{% qs interval=option page=1 %}" class="{% if window.interval == option %}is-active{% endif %}"
+       hx-get="{% qs interval=option page=1 %}" hx-target="#rv-tab-panel" hx-swap="innerHTML" hx-push-url="true" data-rv-skeleton="panel">
       {{ option|title }}
     </a>
   {% endfor %}
@@ -19,13 +20,15 @@
     {% for preset in range_presets %}
       {% if preset.days %}
         <a class="rv-dropdown__item {% if window.preset == preset.key %}is-active{% endif %}"
-           href="{% qs range=preset.key start=None end=None page=1 %}">
+           href="{% qs range=preset.key start=None end=None page=1 %}"
+           hx-get="{% qs range=preset.key start=None end=None page=1 %}" hx-target="#rv-tab-panel" hx-swap="innerHTML" hx-push-url="true" data-rv-skeleton="panel">
           {{ preset.label }} <span style="margin-left:auto;color:var(--rv-text-subtle);font-size:12px">{{ preset.days }} days</span>
         </a>
       {% endif %}
     {% endfor %}
     <div class="rv-dropdown__divider"></div>
-    <form method="get" style="padding:6px 4px 2px;display:grid;gap:8px">
+    <form method="get" style="padding:6px 4px 2px;display:grid;gap:8px"
+          hx-get="{{ request.path }}" hx-target="#rv-tab-panel" hx-swap="innerHTML" hx-push-url="true" data-rv-skeleton="panel">
       {% for key, value in request.GET.items %}
         {% if key != 'start' and key != 'end' and key != 'range' and key != 'page' %}
           <input type="hidden" name="{{ key }}" value="{{ value }}">

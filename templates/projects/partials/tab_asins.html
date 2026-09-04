@@ -3,7 +3,7 @@
 
 <form class="rv-toolbar" method="get" role="search"
       hx-get="{% url 'projects:asins' project.project_id %}" hx-target="#rv-asin-results" hx-push-url="true"
-      hx-trigger="submit, input from:#rv-asin-search delay:350ms, change from:select">
+      hx-trigger="submit, input from:#rv-asin-search delay:350ms, change from:find select">
   <div class="rv-search">
     <svg aria-hidden="true"><use href="#rv-i-search"></use></svg>
     <input type="search" class="rv-input" id="rv-asin-search" name="q" value="{{ search }}"

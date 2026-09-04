@@ -226,6 +226,15 @@
     });
   }
 
+  /* -------------------------------------------------- clickable rows */
+  function initRowLinks() {
+    $(document).on("click", ".rv-row-link", function (event) {
+      if ($(event.target).closest("a, button, input, .rv-dropdown").length) return;
+      var href = this.getAttribute("data-href");
+      if (href) window.location.href = href;
+    });
+  }
+
   /* ------------------------------------------------------------- init */
   $(function () {
     initSidebar();
@@ -236,6 +245,7 @@
     initFormStates();
     initTableSelection();
     initMatrixScroll();
+    initRowLinks();
     initHtmx();
   });
 })(window.jQuery);

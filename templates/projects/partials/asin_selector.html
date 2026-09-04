@@ -9,7 +9,8 @@
   <div class="rv-dropdown__menu" style="left:0;right:auto;min-width:300px" role="listbox">
     {% for option in asin_options %}
       <a class="rv-dropdown__item {% if option.asin == selected_asin %}is-active{% endif %}"
-         href="{% qs asin=option.asin page=1 %}" role="option"
+         href="{% qs asin=option.asin page=1 %}"
+         hx-get="{% qs asin=option.asin page=1 %}" hx-target="#rv-tab-panel" hx-swap="innerHTML" hx-push-url="true" data-rv-skeleton="panel" role="option"
          {% if option.asin == selected_asin %}aria-selected="true"{% endif %}>
         <span class="rv-mono">{{ option.asin }}</span>
         <span class="rv-truncate" style="max-width:150px;color:var(--rv-text-muted);font-size:12px">{{ option.title }}</span>

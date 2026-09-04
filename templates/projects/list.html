@@ -19,7 +19,7 @@
 
 <form class="rv-toolbar" method="get" action="{% url 'projects:list' %}" role="search"
       hx-get="{% url 'projects:list' %}" hx-target="#rv-project-results" hx-push-url="true"
-      hx-trigger="submit, input from:#rv-project-search delay:350ms, change from:select">
+      hx-trigger="submit, input from:#rv-project-search delay:350ms, change from:find select">
   <div class="rv-search">
     <svg aria-hidden="true"><use href="#rv-i-search"></use></svg>
     <input type="search" class="rv-input" id="rv-project-search" name="q" value="{{ search }}"
@@ -46,10 +46,14 @@
   </select>
 
   <div class="rv-segment" role="group" aria-label="View mode">
-    <a href="{% qs view='grid' %}" class="{% if view_mode == 'grid' %}is-active{% endif %}" aria-label="Grid view">
+    <a href="{% qs view='grid' %}" class="{% if view_mode == 'grid' %}is-active{% endif %}"
+       hx-get="{% qs view='grid' %}" hx-target="#rv-project-results" hx-push-url="true"
+       data-rv-skeleton="grid" aria-label="Grid view">
       <svg aria-hidden="true"><use href="#rv-i-grid"></use></svg>
     </a>
-    <a href="{% qs view='list' %}" class="{% if view_mode == 'list' %}is-active{% endif %}" aria-label="List view">
+    <a href="{% qs view='list' %}" class="{% if view_mode == 'list' %}is-active{% endif %}"
+       hx-get="{% qs view='list' %}" hx-target="#rv-project-results" hx-push-url="true"
+       data-rv-skeleton="table" aria-label="List view">
       <svg aria-hidden="true"><use href="#rv-i-list"></use></svg>
     </a>
   </div>

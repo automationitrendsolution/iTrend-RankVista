@@ -200,41 +200,9 @@ def _project_context(request: HttpRequest, project_id: int, tab: str) -> dict[st
 
 @login_required
 def project_detail(request: HttpRequest, project_id: int) -> HttpResponse:
+    """Opening a project lands on Ranks; the other tabs are one click away."""
     require_project(project_id)
-    return redirect(reverse("projects:asins", args=[project_id]))
-
-
-@login_required
-def project_quickview(request: HttpRequest, project_id: int) -> HttpResponse:
-    """Card click target: a modal summary that keeps the user on the project grid."""
-    project = require_project(project_id)
-    repo.touch_last_opened(project_id)
-    try:
-        top_asins = asin_repo.selector_options(project_id, limit=12)
-        window = _clamped_window(
-            request, project_id, top_asins[0]["asin"] if top_asins else ""
-        )
-        overview = (
-            analytics.build_overview(
-                project_id=project_id, asin=top_asins[0]["asin"], window=window
-            )
-            if top_asins
-            else None
-        )
-    except SourceUnavailable as exc:
-        return _error_page(request, str(exc))
-
-    return render(
-        request,
-        "projects/partials/project_quickview.html",
-        {
-            "project": project,
-            "market": marketplace(project.get("marketplace")),
-            "top_asins": top_asins,
-            "overview": overview,
-            "active_nav": "projects",
-        },
-    )
+    return redirect(reverse("projects:ranks", args=[project_id]))
 
 
 @login_required

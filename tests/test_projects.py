@@ -86,23 +86,26 @@ def test_htmx_request_returns_a_partial(client_as_user, live_project):
 
 
 # ------------------------------------------------------------ project detail
-def test_detail_redirects_to_asins(client_as_user, live_project):
+def test_detail_redirects_to_ranks(client_as_user, live_project):
     response = client_as_user.get(reverse("projects:detail", args=[live_project["project_id"]]))
     assert response.status_code == 302
-    assert response.url.endswith("/asins/")
+    assert response.url.endswith("/ranks/")
 
 
 def test_unknown_project_returns_404(client_as_user, warehouse, db):
-    for route in ("detail", "asins", "keywords", "ranks", "trends", "quickview"):
+    for route in ("detail", "asins", "keywords", "ranks", "trends"):
         response = client_as_user.get(reverse(f"projects:{route}", args=[987654321]))
         assert response.status_code == 404, route
 
 
-def test_quickview_renders_a_modal(client_as_user, live_project):
-    response = client_as_user.get(reverse("projects:quickview", args=[live_project["project_id"]]))
-    assert response.status_code == 200
-    assert b"rv-modal" in response.content
-    assert b"<html" not in response.content
+def test_detail_opens_on_ranks_not_a_modal(client_as_user, live_project):
+    """Opening a project lands on Ranks; there is no quick-view modal."""
+    response = client_as_user.get(reverse("projects:detail", args=[live_project["project_id"]]))
+    assert response.status_code == 302
+    assert response.url.endswith("/ranks/")
+
+    listing = client_as_user.get(reverse("projects:list")).content
+    assert b"rv-modal-root\" hx-get" not in listing
 
 
 def test_asin_tab_lists_the_registry(client_as_user, live_project):
