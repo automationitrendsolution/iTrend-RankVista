@@ -33,7 +33,11 @@ COPY --from=builder /opt/venv /opt/venv
 WORKDIR /app
 COPY . .
 
-RUN mkdir -p /app/data /app/staticfiles \
+# A Windows checkout can carry CRLF into the entrypoint, which leaves the kernel
+# looking for `sh\r`. Strip it here so the image works whatever the host did.
+RUN sed -i 's/\r$//' /app/docker/entrypoint.sh \
+    && chmod +x /app/docker/entrypoint.sh \
+    && mkdir -p /app/data /app/staticfiles \
     && chown -R rankvista:rankvista /app /opt/venv
 
 USER rankvista
