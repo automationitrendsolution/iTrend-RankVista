@@ -11,7 +11,8 @@
     <a class="rv-dropdown__item" href="{% url 'projects:ranks' project.project_id %}">
       <svg aria-hidden="true" width="15" height="15"><use href="#rv-i-chart"></use></svg> Open ranks
     </a>
-    <a class="rv-dropdown__item" href="{% url 'projects:edit' project.project_id %}">
+    <a class="rv-dropdown__item" href="{% url 'projects:edit' project.project_id %}"
+       hx-get="{% url 'projects:edit' project.project_id %}" hx-target="#rv-modal-root" hx-swap="innerHTML" hx-push-url="false">
       <svg aria-hidden="true" width="15" height="15"><use href="#rv-i-edit"></use></svg> Edit project
     </a>
     <div class="rv-dropdown__divider"></div>

@@ -34,7 +34,9 @@
     <div class="rv-auth__footer">&copy; {% now "Y" %} {{ BRAND.COMPANY }}. All rights reserved.</div>
   </section>
 
-  <section class="rv-auth__panel">
+  <section class="rv-auth__panel" style="position:relative">
+    {% include "partials/header_utils.html" %}
+
     <form class="rv-auth__form" method="post" action="{% url 'accounts:login' %}" novalidate data-rv-loading>
       {% csrf_token %}
       <input type="hidden" name="next" value="{{ next }}">

@@ -104,10 +104,24 @@ h3 { font-size: 13px; }
 .rv-matrix__date { width: 42px; min-width: 42px; }
 
 .rv-matrix .rv-sticky--check { width: 32px; min-width: 32px; }
-.rv-matrix .rv-sticky--keyword { left: 32px; width: 240px; min-width: 240px; max-width: 240px; }
-.rv-matrix .rv-sticky--m1 { left: 272px; width: 76px; min-width: 76px; }
-.rv-matrix .rv-sticky--m2 { left: 348px; width: 88px; min-width: 88px; }
-.rv-matrix .rv-sticky--m3 { left: 436px; width: 76px; min-width: 76px; }
+.rv-matrix .rv-sticky--keyword { left: 32px; width: 236px; min-width: 236px; max-width: 236px; }
+/* Wide enough for a six-figure sales value and the L4W header chip. */
+.rv-matrix .rv-sticky--m1 { left: 268px; width: 96px; min-width: 96px; }
+.rv-matrix .rv-sticky--m2 { left: 364px; width: 104px; min-width: 104px; }
+.rv-matrix .rv-sticky--m3 { left: 468px; width: 92px; min-width: 92px; }
+
+/* Metric headers sit right-aligned over right-aligned values, so each column
+   reads as one straight line. Date headers stay centred over centred ranks. */
+.rv-matrix thead .rv-sticky--m1,
+.rv-matrix thead .rv-sticky--m2,
+.rv-matrix thead .rv-sticky--m3 { text-align: right; padding-right: 9px; }
+.rv-matrix thead .rv-matrix__date { text-align: center; }
+
+/* Metric values must never be clipped by their cell. */
+.rv-matrix__metric { white-space: nowrap; overflow: visible; }
+.rv-matrix .rv-sticky--m1,
+.rv-matrix .rv-sticky--m2,
+.rv-matrix .rv-sticky--m3 { overflow: visible; }
 
 .rv-legend { padding: 8px 12px; font-size: 11.5px; gap: 14px; }
 .rv-legend__bar { width: 132px; height: 10px; }
@@ -129,9 +143,12 @@ h3 { font-size: 13px; }
 .rv-kpi { padding: 11px 13px; min-height: 116px; gap: 6px; }
 .rv-kpi__label { font-size: 11.5px; }
 .rv-kpi__value { font-size: 21px; }
-.rv-kpi__chart, .rv-kpi__chart svg, .rv-kpi__axis, .rv-dist { min-height: 56px; height: 56px; }
-.rv-dist__chart { height: 62px; }
-.rv-dist__legend { font-size: 10.5px; }
+.rv-kpi__chart, .rv-kpi__chart svg, .rv-kpi__axis { min-height: 56px; height: 56px; }
+
+/* The distribution card has no big number, so its chart claims the whole body. */
+.rv-dist { flex: 1; min-height: 0; align-items: stretch; }
+.rv-dist__chart { height: auto; align-self: stretch; }
+.rv-dist__legend { font-size: 10.5px; justify-content: center; }
 
 .rv-card__header { padding: 10px 13px; }
 .rv-card__body { padding: 13px; }

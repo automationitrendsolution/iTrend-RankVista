@@ -1,0 +1,69 @@
+{% comment %}Generic form modal. HTMX posts back into itself so validation errors
+re-render in place; a success response sends HX-Redirect instead.{% endcomment %}
+<div class="rv-modal-backdrop" id="rv-form-modal">
+  <div class="rv-modal {{ modal_size|default:'' }}" role="dialog" aria-modal="true"
+       aria-labelledby="rv-form-modal-title">
+    <form method="post" action="{{ form_action }}" novalidate
+          hx-post="{{ form_action }}" hx-target="#rv-form-modal" hx-swap="outerHTML">
+      {% csrf_token %}
+
+      <div class="rv-modal__header">
+        <div style="min-width:0">
+          <h2 id="rv-form-modal-title">{{ modal_title }}</h2>
+          {% if modal_subtitle %}
+            <div style="font-size:11.5px;color:var(--rv-text-subtle)">{{ modal_subtitle }}</div>
+          {% endif %}
+        </div>
+        <button type="button" class="rv-btn rv-btn--ghost rv-btn--icon rv-btn--sm"
+                data-rv-close-modal aria-label="Close">&times;</button>
+      </div>
+
+      <div class="rv-modal__body">
+        {% if form.non_field_errors %}
+          <div class="rv-auth__alert" role="alert">
+            <svg aria-hidden="true"><use href="#rv-i-alert"></use></svg>
+            <div>{{ form.non_field_errors.0 }}</div>
+          </div>
+        {% endif %}
+
+        <div class="rv-form-grid">
+          {% for field in form %}
+            <div class="rv-field {% if field.name in wide_fields %}rv-field--wide{% endif %}{% if field.field.widget.input_type == 'checkbox' %} rv-field--toggle{% endif %}">
+              {% if field.field.widget.input_type == 'checkbox' %}
+                <label class="rv-check-row">
+                  {{ field }} <span>{{ field.label }}</span>
+                </label>
+              {% else %}
+                <label class="rv-field__label" for="{{ field.id_for_label }}">
+                  {{ field.label }}{% if field.field.required %} <span style="color:var(--rv-danger)">*</span>{% endif %}
+                </label>
+                {% if 'password' in field.name %}
+                  <div class="rv-password">
+                    {{ field }}
+                    <button type="button" class="rv-password__toggle" data-rv-password-toggle
+                            aria-label="Show password">
+                      <svg aria-hidden="true" data-eye-open width="16" height="16"><use href="#rv-i-eye"></use></svg>
+                      <svg aria-hidden="true" data-eye-closed width="16" height="16" style="display:none"><use href="#rv-i-eye-off"></use></svg>
+                    </button>
+                  </div>
+                {% else %}
+                  {{ field }}
+                {% endif %}
+              {% endif %}
+              {% if field.errors %}<div class="rv-field__error">{{ field.errors.0 }}</div>{% endif %}
+              {% if field.help_text %}<div class="rv-field__hint">{{ field.help_text }}</div>{% endif %}
+            </div>
+          {% endfor %}
+        </div>
+
+        {% block modal_extra %}{% endblock %}
+        {% if modal_extra_template %}{% include modal_extra_template %}{% endif %}
+      </div>
+
+      <div class="rv-modal__footer">
+        <button type="button" class="rv-btn" data-rv-close-modal>Cancel</button>
+        <button type="submit" class="rv-btn rv-btn--primary">{{ submit_label|default:"Save" }}</button>
+      </div>
+    </form>
+  </div>
+</div>

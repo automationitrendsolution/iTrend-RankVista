@@ -1,0 +1,17 @@
+{% comment %}Header right side: live IST clock and the theme switch.{% endcomment %}
+<div class="rv-header__utils">
+  <div class="rv-clock" data-rv-clock title="Current time, India Standard Time (UTC+5:30)">
+    <svg aria-hidden="true"><use href="#rv-i-clock"></use></svg>
+    <span class="rv-clock__time" data-rv-clock-time>--:--:-- --</span>
+    <span class="rv-clock__zone">IST</span>
+  </div>
+
+  <button type="button" class="rv-theme-toggle" data-rv-theme-toggle
+          aria-label="Switch between light and dark theme" title="Switch theme">
+    <span class="rv-theme-toggle__track" aria-hidden="true">
+      <svg class="rv-theme-toggle__sun"><use href="#rv-i-sun"></use></svg>
+      <svg class="rv-theme-toggle__moon"><use href="#rv-i-moon"></use></svg>
+      <span class="rv-theme-toggle__knob"></span>
+    </span>
+  </button>
+</div>

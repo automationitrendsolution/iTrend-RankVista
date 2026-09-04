@@ -154,7 +154,10 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     @property
     def rank(self) -> int:
-        return ROLE_RANK.get(self.role, 0)
+        # Imported lazily: the role table itself lives in this module tree.
+        from apps.accounts import roles as role_service
+
+        return role_service.rank(self.role)
 
     @property
     def is_super_admin(self) -> bool:
@@ -165,10 +168,16 @@ class User(AbstractBaseUser, PermissionsMixin):
         return self.role in {Role.SUPER_ADMIN, Role.ADMIN}
 
     def has_role_at_least(self, role: str) -> bool:
-        return self.rank >= ROLE_RANK.get(role, 0)
+        from apps.accounts import roles as role_service
+
+        return self.rank >= role_service.rank(role)
 
     def can_manage(self, other: User) -> bool:
         """Only a super admin manages users, and never one outranking them."""
         if not self.is_super_admin or self.pk == other.pk:
             return False
         return self.rank >= other.rank
+
+
+# Roles and their page permissions are stored alongside the user model.
+from apps.accounts.role_models import RoleDefinition, RolePermission  # noqa: E402,F401

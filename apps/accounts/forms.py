@@ -13,6 +13,13 @@ from apps.accounts.models import Department, Role, User
 INPUT_CLASS = "rv-input"
 
 
+def _role_choices():
+    """Assignable roles, read from the role table so custom roles appear."""
+    from apps.accounts import roles as role_service
+
+    return role_service.choices()
+
+
 class LoginForm(forms.Form):
     """Email/username plus password, with an optional persistent session."""
 
@@ -137,6 +144,7 @@ class UserCreateForm(forms.ModelForm):
         # Only active departments can be assigned to a user.
         self.fields["department"].queryset = Department.objects.filter(is_active=True)
         self.fields["department"].empty_label = "No department"
+        self.fields["role"].choices = _role_choices()
 
     def clean_email(self) -> str:
         email = self.cleaned_data["email"].lower().strip()
@@ -183,6 +191,7 @@ class UserUpdateForm(forms.ModelForm):
         # Only active departments can be assigned to a user.
         self.fields["department"].queryset = Department.objects.filter(is_active=True)
         self.fields["department"].empty_label = "No department"
+        self.fields["role"].choices = _role_choices()
 
     def clean_email(self) -> str:
         email = self.cleaned_data["email"].lower().strip()

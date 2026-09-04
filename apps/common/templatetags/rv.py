@@ -100,3 +100,11 @@ def dict_get(mapping, key):
     if hasattr(mapping, "get"):
         return mapping.get(key)
     return None
+
+
+@register.filter
+def get(mapping, key):
+    """Look up a dynamic key in a dict from a template."""
+    if hasattr(mapping, "get"):
+        return mapping.get(key)
+    return None

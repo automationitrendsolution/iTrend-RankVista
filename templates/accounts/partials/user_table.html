@@ -61,10 +61,12 @@
                     <svg aria-hidden="true" width="15" height="15"><use href="#rv-i-more"></use></svg>
                   </button>
                   <div class="rv-dropdown__menu">
-                    <a class="rv-dropdown__item" href="{% url 'useradmin:user_edit' row.pk %}">
+                    <a class="rv-dropdown__item" href="{% url 'useradmin:user_edit' row.pk %}"
+                       hx-get="{% url 'useradmin:user_edit' row.pk %}" hx-target="#rv-modal-root" hx-swap="innerHTML" hx-push-url="false">
                       <svg aria-hidden="true" width="15" height="15"><use href="#rv-i-edit"></use></svg> Edit user
                     </a>
-                    <a class="rv-dropdown__item" href="{% url 'useradmin:user_password' row.pk %}">
+                    <a class="rv-dropdown__item" href="{% url 'useradmin:user_password' row.pk %}"
+                       hx-get="{% url 'useradmin:user_password' row.pk %}" hx-target="#rv-modal-root" hx-swap="innerHTML" hx-push-url="false">
                       <svg aria-hidden="true" width="15" height="15"><use href="#rv-i-key"></use></svg> Reset password
                     </a>
                     <form method="post" action="{% url 'useradmin:user_toggle' row.pk %}">

@@ -113,6 +113,7 @@ TEMPLATES = [
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
                 "apps.common.context_processors.branding",
+                "apps.common.context_processors.permissions",
             ],
         },
     },
@@ -303,6 +304,6 @@ LOGGING = {
 BRAND = {
     "NAME": "iTrend RankVista",
     "SHORT_NAME": "RankVista",
-    "COMPANY": "iTrend Solutions",
+    "COMPANY": "iTrend Solution",
     "TAGLINE": "Amazon Search, ASIN & Keyword Intelligence Platform",
 }

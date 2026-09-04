@@ -44,5 +44,25 @@ def role_required(minimum: str) -> Callable:
     return decorator
 
 
+def page_required(key: str) -> Callable:
+    """Guard a view with the minimum role declared for that page in the matrix."""
+
+    def decorator(view: Callable[..., HttpResponse]) -> Callable[..., HttpResponse]:
+        @wraps(view)
+        @login_required
+        def wrapper(request: HttpRequest, *args, **kwargs) -> HttpResponse:
+            from apps.accounts import roles as role_service
+            from apps.accounts.pages import page
+
+            required = page(key)
+            if not role_service.can(request.user.role, key):
+                raise PermissionDenied(f"Your role cannot open {required.label}.")
+            return view(request, *args, **kwargs)
+
+        return wrapper
+
+    return decorator
+
+
 admin_required = role_required(Role.ADMIN)
 super_admin_required = role_required(Role.SUPER_ADMIN)

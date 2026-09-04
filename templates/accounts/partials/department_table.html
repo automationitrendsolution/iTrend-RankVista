@@ -43,7 +43,8 @@
                   <svg aria-hidden="true"><use href="#rv-i-more"></use></svg>
                 </button>
                 <div class="rv-dropdown__menu">
-                  <a class="rv-dropdown__item" href="{% url 'useradmin:department_edit' row.pk %}">
+                  <a class="rv-dropdown__item" href="{% url 'useradmin:department_edit' row.pk %}"
+                     hx-get="{% url 'useradmin:department_edit' row.pk %}" hx-target="#rv-modal-root" hx-swap="innerHTML" hx-push-url="false">
                     <svg aria-hidden="true"><use href="#rv-i-edit"></use></svg> Edit department
                   </a>
                   <form method="post" action="{% url 'useradmin:department_toggle' row.pk %}">

@@ -1,5 +1,10 @@
 {% load rv humanize %}
-<article class="rv-project-card">
+<article class="rv-project-card" data-rv-selectable>
+  <label class="rv-project-card__select" title="Select {{ project.name }}">
+    <input type="checkbox" class="rv-check" data-rv-select-row value="{{ project.project_id }}"
+           aria-label="Select {{ project.name }}">
+  </label>
+
   <div class="rv-project-card__menu">
     {% include "projects/partials/project_menu.html" with project=project %}
   </div>

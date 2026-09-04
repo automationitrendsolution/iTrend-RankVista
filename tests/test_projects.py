@@ -281,8 +281,8 @@ def test_keyword_history_drawer(client_as_user, live_project):
 
 
 # ------------------------------------------------------------ write surface
-def test_create_project_writes_to_the_overlay(client_as_user, warehouse, db):
-    response = client_as_user.post(
+def test_create_project_writes_to_the_overlay(client_as_admin, warehouse, db):
+    response = client_as_admin.post(
         reverse("projects:create"),
         {
             "name": "Overlay Test Project",
@@ -303,8 +303,8 @@ def test_create_project_writes_to_the_overlay(client_as_user, warehouse, db):
     assert document["tags"] == ["winter", "cover"]
 
 
-def test_create_project_validates_asin(client_as_user, warehouse, db):
-    response = client_as_user.post(
+def test_create_project_validates_asin(client_as_admin, warehouse, db):
+    response = client_as_admin.post(
         reverse("projects:create"),
         {"name": "Bad ASIN Project", "marketplace": "US", "primary_asin": "TOOSHORT"},
     )
@@ -312,8 +312,8 @@ def test_create_project_validates_asin(client_as_user, warehouse, db):
     assert b"exactly 10 letters or digits" in response.content
 
 
-def test_create_project_validates_name(client_as_user, warehouse, db):
-    response = client_as_user.post(
+def test_create_project_validates_name(client_as_admin, warehouse, db):
+    response = client_as_admin.post(
         reverse("projects:create"),
         {"name": "ab", "marketplace": "US", "primary_asin": "B0CF1NXT25"},
     )
@@ -321,8 +321,8 @@ def test_create_project_validates_name(client_as_user, warehouse, db):
     assert b"at least 3 characters" in response.content
 
 
-def test_edit_project_overrides_the_derived_name(client_as_user, live_project):
-    response = client_as_user.post(
+def test_edit_project_overrides_the_derived_name(client_as_admin, live_project):
+    response = client_as_admin.post(
         reverse("projects:edit", args=[live_project["project_id"]]),
         {
             "name": "Renamed By Test",
@@ -337,19 +337,33 @@ def test_edit_project_overrides_the_derived_name(client_as_user, live_project):
     assert repo.get_project(live_project["project_id"])["name"] == "Renamed By Test"
 
 
-def test_archive_hides_the_project_but_keeps_history(client_as_user, live_project):
+def test_archive_hides_the_project_but_keeps_history(client_as_admin, live_project):
     from apps.projects import repositories as repo
 
     project_id = live_project["project_id"]
-    client_as_user.post(reverse("projects:archive", args=[project_id]))
+    client_as_admin.post(reverse("projects:archive", args=[project_id]))
 
     assert repo.get_project(project_id)["status"] == "archived"
     assert repo.has_ranking_data(project_id)
 
-    listed = client_as_user.get(reverse("projects:list")).context["page_obj"].items
+    listed = client_as_admin.get(reverse("projects:list")).context["page_obj"].items
     assert all(p["project_id"] != project_id for p in listed)
 
 
-def test_archive_requires_post(client_as_user, live_project):
-    response = client_as_user.get(reverse("projects:archive", args=[live_project["project_id"]]))
+def test_archive_requires_post(client_as_admin, live_project):
+    response = client_as_admin.get(reverse("projects:archive", args=[live_project["project_id"]]))
     assert response.status_code == 405
+
+
+# --------------------------------------------------------- page permissions
+def test_plain_user_cannot_create_or_edit_projects(client_as_user, live_project):
+    """Read access is open to every role; write access needs ADMIN."""
+    assert client_as_user.get(reverse("projects:create")).status_code == 403
+    assert client_as_user.get(reverse("projects:edit", args=[live_project["project_id"]])).status_code == 403
+    assert client_as_user.post(reverse("projects:archive", args=[live_project["project_id"]])).status_code == 403
+
+
+def test_plain_user_can_read_every_project_screen(client_as_user, live_project):
+    for route in ("asins", "keywords", "ranks", "trends"):
+        response = client_as_user.get(reverse(f"projects:{route}", args=[live_project["project_id"]]))
+        assert response.status_code == 200, route

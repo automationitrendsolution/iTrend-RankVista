@@ -11,6 +11,25 @@ from apps.accounts.models import Role, User
 
 
 @pytest.fixture(autouse=True)
+def isolated_mongo(settings):
+    """Point the overlay at a throwaway database.
+    Without this the suite writes project overlays into the live database."""
+    import uuid
+
+    from apps.common import mongo
+
+    name = f"rankvista_test_{uuid.uuid4().hex[:10]}"
+    settings.MONGODB = {**settings.MONGODB, "DATABASE": name}
+    mongo.reset_client()
+    yield
+    try:
+        mongo.get_client().drop_database(name)
+    except Exception:
+        pass
+    mongo.reset_client()
+
+
+@pytest.fixture(autouse=True)
 def clear_cache(settings):
     """Isolate cached warehouse aggregates so one test never leaks into the next."""
     settings.CACHES = {
@@ -74,6 +93,12 @@ def client_as_super(client: Client, super_admin: User) -> Client:
 @pytest.fixture
 def client_as_user(client: Client, normal_user: User) -> Client:
     client.force_login(normal_user)
+    return client
+
+
+@pytest.fixture
+def client_as_admin(client: Client, admin_user: User) -> Client:
+    client.force_login(admin_user)
     return client
 
 

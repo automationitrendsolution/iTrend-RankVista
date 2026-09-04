@@ -1,6 +1,6 @@
 from django.urls import path
 
-from apps.accounts import admin_views, department_views
+from apps.accounts import admin_views, department_views, role_views
 
 app_name = "useradmin"
 
@@ -17,5 +17,9 @@ urlpatterns = [
     path("departments/<str:pk>/edit/", department_views.department_edit, name="department_edit"),
     path("departments/<str:pk>/toggle/", department_views.department_toggle, name="department_toggle"),
     path("departments/<str:pk>/delete/", department_views.department_delete, name="department_delete"),
-    path("roles/", department_views.role_list, name="role_list"),
+    path("roles/", role_views.role_list, name="role_list"),
+    path("roles/new/", role_views.role_create, name="role_create"),
+    path("roles/<str:pk>/edit/", role_views.role_edit, name="role_edit"),
+    path("roles/<str:pk>/permission/", role_views.role_permission_toggle, name="role_permission_toggle"),
+    path("roles/<str:pk>/delete/", role_views.role_delete, name="role_delete"),
 ]

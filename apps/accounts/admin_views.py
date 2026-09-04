@@ -15,6 +15,7 @@ from apps.accounts.forms import PasswordResetForm, UserCreateForm, UserUpdateFor
 from apps.accounts.models import Role, User
 from apps.accounts.permissions import super_admin_required
 from apps.accounts.selectors import DEFAULT_USER_SORT, list_users, user_stats
+from apps.common.modals import is_modal, redirect_response, render_modal
 from apps.common.pagination import parse_page_request
 
 
@@ -67,11 +68,22 @@ def user_create(request: HttpRequest) -> HttpResponse:
     if request.method == "POST" and form.is_valid():
         user = services.create_user(form=form, actor=request.user, request=request)
         messages.success(request, f"User {user.email} created.")
-        return redirect(reverse("useradmin:user_list"))
+        target = reverse("useradmin:user_list")
+        return redirect_response(target) if is_modal(request) else redirect(target)
+
+    if is_modal(request):
+        return render_modal(
+            request,
+            form=form,
+            action=reverse("useradmin:user_create"),
+            title="Create user",
+            subtitle="Provision access to the platform",
+            submit_label="Create user",
+            size="rv-modal--wide",
+            status=422 if request.method == "POST" else 200,
+        )
     return render(
-        request,
-        "accounts/user_form.html",
-        {"form": form, "mode": "create", "active_nav": "users"},
+        request, "accounts/user_form.html", {"form": form, "mode": "create", "active_nav": "users"}
     )
 
 
@@ -82,7 +94,20 @@ def user_edit(request: HttpRequest, pk: str) -> HttpResponse:
     if request.method == "POST" and form.is_valid():
         services.update_user(form=form, actor=request.user, request=request)
         messages.success(request, f"User {user.email} updated.")
-        return redirect(reverse("useradmin:user_list"))
+        target = reverse("useradmin:user_list")
+        return redirect_response(target) if is_modal(request) else redirect(target)
+
+    if is_modal(request):
+        return render_modal(
+            request,
+            form=form,
+            action=reverse("useradmin:user_edit", args=[pk]),
+            title="Edit user",
+            subtitle=user.email,
+            submit_label="Save changes",
+            size="rv-modal--wide",
+            status=422 if request.method == "POST" else 200,
+        )
     return render(
         request,
         "accounts/user_form.html",
@@ -102,7 +127,19 @@ def user_password(request: HttpRequest, pk: str) -> HttpResponse:
             request=request,
         )
         messages.success(request, f"Password reset for {user.email}.")
-        return redirect(reverse("useradmin:user_list"))
+        target = reverse("useradmin:user_list")
+        return redirect_response(target) if is_modal(request) else redirect(target)
+
+    if is_modal(request):
+        return render_modal(
+            request,
+            form=form,
+            action=reverse("useradmin:user_password", args=[pk]),
+            title="Reset password",
+            subtitle=user.email,
+            submit_label="Reset password",
+            status=422 if request.method == "POST" else 200,
+        )
     return render(
         request,
         "accounts/user_password.html",

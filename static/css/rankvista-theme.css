@@ -1,0 +1,514 @@
+/* Dark theme, header utilities and portalled dropdowns. Loaded last. */
+
+/* ---------------------------------------------------------------- dark */
+/* Every colour in the app is a token, so the dark theme is a token swap. */
+:root[data-theme="dark"] {
+  --rv-bg: #0e1116;
+  --rv-surface: #161a22;
+  --rv-surface-alt: #1b2029;
+  --rv-surface-sunken: #222833;
+  --rv-border: #262d38;
+  --rv-border-strong: #37404e;
+
+  --rv-text: #e7eaf0;
+  --rv-text-muted: #9aa4b5;
+  --rv-text-subtle: #6f7a8b;
+
+  --rv-accent: #7b8cf5;
+  --rv-accent-hover: #94a2f8;
+  --rv-accent-soft: #1e2545;
+  --rv-accent-border: #33407a;
+
+  --rv-success: #4ec89a;
+  --rv-success-soft: #12291f;
+  --rv-danger: #f2718a;
+  --rv-danger-soft: #2c151c;
+  --rv-warning: #e6b062;
+  --rv-warning-soft: #2c2214;
+
+  --rv-shadow-sm: 0 1px 1px rgba(0, 0, 0, 0.4);
+  --rv-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
+  --rv-shadow-lg: 0 18px 44px -10px rgba(0, 0, 0, 0.7), 0 4px 14px rgba(0, 0, 0, 0.45);
+
+  color-scheme: dark;
+}
+
+:root[data-theme="dark"] .rv-header { background: rgba(22, 26, 34, 0.92); }
+
+/* Native controls need the dark chevron, or it disappears into the field. */
+:root[data-theme="dark"] .rv-select {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%239aa4b5' stroke-width='1.6'%3E%3Cpath d='M4 6.5 8 10.5 12 6.5'/%3E%3C/svg%3E");
+}
+:root[data-theme="dark"] input[type="date"] { color-scheme: dark; }
+
+/* The rank heat scale keeps dark text, so the swatches are dimmed rather than
+   inverted; the hue ordering that carries the meaning is preserved. */
+:root[data-theme="dark"] .rv-cell--r1  { background: #7fc79b; }
+:root[data-theme="dark"] .rv-cell--r2  { background: #8ecb96; }
+:root[data-theme="dark"] .rv-cell--r3  { background: #a5d192; }
+:root[data-theme="dark"] .rv-cell--r4  { background: #bad78f; }
+:root[data-theme="dark"] .rv-cell--r5  { background: #d2dc8d; }
+:root[data-theme="dark"] .rv-cell--r6  { background: #e0cf87; }
+:root[data-theme="dark"] .rv-cell--r7  { background: #e3bb80; }
+:root[data-theme="dark"] .rv-cell--r8  { background: #e0a479; }
+:root[data-theme="dark"] .rv-cell--r9  { background: #dd8f77; }
+:root[data-theme="dark"] .rv-cell--r10 { background: #d97e7e; }
+:root[data-theme="dark"] .rv-cell--unranked { background: var(--rv-surface); color: var(--rv-text-subtle); }
+:root[data-theme="dark"] .rv-cell--untracked { background: #1f242e; }
+:root[data-theme="dark"] .rv-cell--checking { background: var(--rv-accent-soft); }
+:root[data-theme="dark"] .rv-matrix tbody tr:hover .rv-sticky { background: #1e242e; }
+
+:root[data-theme="dark"] .rv-spark__line { stroke: #9aa4b5; }
+:root[data-theme="dark"] .rv-spark__area { fill: rgba(154, 164, 181, 0.12); }
+
+:root[data-theme="dark"] .rv-skeleton {
+  background: linear-gradient(90deg, #1c222c 25%, #242b37 50%, #1c222c 75%);
+  background-size: 200% 100%;
+}
+
+:root[data-theme="dark"] .rv-tooltip { background: #05070a; border: 1px solid var(--rv-border); }
+:root[data-theme="dark"] .rv-thumb,
+:root[data-theme="dark"] .rv-project-card__media img,
+:root[data-theme="dark"] .rv-qv__media img {
+  /* Product shots are shot on white; a soft plate keeps them from glaring. */
+  background: #e9ecf1;
+  border-radius: var(--rv-radius-sm);
+}
+
+/* ------------------------------------------------------ header utilities */
+.rv-header__utils {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+.rv-clock {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 28px;
+  padding: 0 10px;
+  border: 1px solid var(--rv-border);
+  border-radius: 20px;
+  background: var(--rv-surface-alt);
+  color: var(--rv-text-muted);
+  font-size: 12px;
+  white-space: nowrap;
+}
+.rv-clock svg { width: 14px; height: 14px; color: var(--rv-text-subtle); flex-shrink: 0; }
+.rv-clock__time {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  color: var(--rv-text);
+  letter-spacing: 0.01em;
+  min-width: 84px;
+  text-align: right;
+}
+.rv-clock__zone {
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--rv-text-subtle);
+}
+
+.rv-theme-toggle {
+  border: 0;
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
+  line-height: 0;
+}
+.rv-theme-toggle__track {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 50px;
+  height: 26px;
+  padding: 0 6px;
+  border: 1px solid var(--rv-border-strong);
+  border-radius: 20px;
+  background: var(--rv-surface-sunken);
+  transition: background 0.16s ease, border-color 0.16s ease;
+}
+.rv-theme-toggle__track svg { width: 13px; height: 13px; position: relative; z-index: 1; }
+.rv-theme-toggle__sun { color: #d99a2b; }
+.rv-theme-toggle__moon { color: #8b93a3; }
+.rv-theme-toggle__knob {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--rv-surface);
+  box-shadow: 0 1px 3px rgba(16, 24, 40, 0.3);
+  transition: transform 0.18s cubic-bezier(0.4, 0, 0.2, 1);
+}
+:root[data-theme="dark"] .rv-theme-toggle__knob { transform: translateX(24px); }
+:root[data-theme="dark"] .rv-theme-toggle__moon { color: var(--rv-accent); }
+:root[data-theme="dark"] .rv-theme-toggle__sun { color: #5c6475; }
+.rv-theme-toggle:hover .rv-theme-toggle__track { border-color: var(--rv-accent-border); }
+
+/* The login screen has no shell, so the shared utilities float over the panel. */
+.rv-auth__panel .rv-header__utils {
+  position: absolute;
+  top: 18px;
+  right: 20px;
+  margin-left: 0;
+  z-index: 2;
+}
+
+/* The branded half stays dark in both themes, so its copy is always light. */
+:root[data-theme="dark"] .rv-auth__panel { background: var(--rv-surface); }
+:root[data-theme="dark"] .rv-auth__form > p,
+:root[data-theme="dark"] .rv-auth__meta { color: var(--rv-text-muted); }
+
+@media (max-width: 900px) {
+  .rv-clock__zone { display: none; }
+}
+@media (max-width: 620px) {
+  .rv-clock { display: none; }
+}
+
+/* --------------------------------------------------------- dropdowns */
+/* Menus inside a scroll container were clipped by its overflow. Opening one
+   moves it to <body> and positions it with fixed coordinates instead. */
+.rv-dropdown__menu.rv-dropdown__menu--portal {
+  position: fixed;
+  display: block;
+  z-index: 120;
+  /* Shrink to content, but never wider than the viewport or taller than it. */
+  width: max-content;
+  min-width: 200px;
+  max-width: min(420px, calc(100vw - 16px));
+  max-height: min(60vh, 420px);
+  overflow-y: auto;
+  animation: rv-menu-in 0.12s ease;
+}
+.rv-dropdown__menu--portal .rv-dropdown__item { white-space: nowrap; }
+
+@keyframes rv-menu-in {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: none; }
+}
+
+.rv-dropdown__menu {
+  padding: 5px;
+  border-radius: var(--rv-radius);
+  border-color: var(--rv-border-strong);
+}
+.rv-dropdown__item {
+  border-radius: var(--rv-radius-sm);
+  transition: background 0.1s ease, color 0.1s ease;
+}
+.rv-dropdown__item:hover { background: var(--rv-accent-soft); color: var(--rv-accent); }
+.rv-dropdown__item--danger:hover { background: var(--rv-danger-soft); color: var(--rv-danger); }
+.rv-dropdown__menu form { display: contents; }
+
+/* ----------------------------------------------------------- spinners */
+/* A button in flight keeps its width and swaps its label for a spinner. */
+.rv-btn.is-loading {
+  position: relative;
+  color: transparent !important;
+  pointer-events: none;
+}
+.rv-btn.is-loading > * { visibility: hidden; }
+.rv-btn.is-loading::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 14px;
+  height: 14px;
+  margin: -7px 0 0 -7px;
+  border: 2px solid currentColor;
+  border-top-color: transparent;
+  border-radius: 50%;
+  color: var(--rv-accent);
+  animation: rv-spin 0.6s linear infinite;
+}
+.rv-btn--primary.is-loading::after,
+.rv-btn--danger.is-loading::after { color: #fff; }
+.rv-btn--danger.is-loading { background: var(--rv-danger); }
+.rv-dropdown__item.is-loading { opacity: 0.6; pointer-events: none; }
+
+/* The Distribution card has no KPI number; stretch its chart to match the others. */
+.rv-kpi:has(.rv-dist) .rv-kpi__label { margin-bottom: 2px; }
+.rv-dist__col { min-width: 4px; border-radius: 2px; overflow: hidden; }
+.rv-dist__legend .rv-dist__row { gap: 7px; }
+
+/* One alignment contract for every table: numbers right, text left, headers match. */
+.rv-table th.rv-num, .rv-table td.rv-num { text-align: right; font-variant-numeric: tabular-nums; }
+.rv-table th:not(.rv-num), .rv-table td:not(.rv-num) { text-align: left; }
+.rv-table td, .rv-table th { vertical-align: middle; }
+
+/* ------------------------------------------------------ permission matrix */
+.rv-matrix-perms .rv-group-row th {
+  position: static;
+  background: var(--rv-surface-sunken);
+  font-size: 10.5px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--rv-text-muted);
+  padding: 6px 10px;
+}
+.rv-perm {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+}
+.rv-perm--yes { background: var(--rv-success-soft); color: var(--rv-success); }
+.rv-perm--yes svg { width: 12px; height: 12px; }
+.rv-perm--no { color: var(--rv-text-subtle); }
+.rv-role-grid .rv-card__body { padding-top: 10px; padding-bottom: 12px; }
+
+/* ---------------------------------------------------------- custom select */
+/* The native select stays for form submission but is visually replaced, since
+   the OS popup cannot be styled. */
+.rv-select-wrap { position: relative; display: inline-flex; }
+.rv-select--hidden {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+}
+
+.rv-select-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+  height: var(--rv-control-h, 30px);
+  padding: 0 9px 0 11px;
+  border: 1px solid var(--rv-border-strong);
+  border-radius: var(--rv-radius);
+  background: var(--rv-surface);
+  color: var(--rv-text);
+  font: inherit;
+  font-size: 12.5px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: border-color 0.12s ease, box-shadow 0.12s ease;
+}
+.rv-select-btn:hover { border-color: var(--rv-text-subtle); }
+.rv-select-btn:focus-visible,
+.rv-select-wrap.is-open .rv-select-btn {
+  outline: none;
+  border-color: var(--rv-accent);
+  box-shadow: 0 0 0 3px var(--rv-accent-soft);
+}
+.rv-select-btn:disabled { opacity: 0.55; cursor: not-allowed; }
+.rv-select-btn__text { overflow: hidden; text-overflow: ellipsis; }
+.rv-select-btn__caret {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+  color: var(--rv-text-subtle);
+  transition: transform 0.14s ease;
+}
+.rv-select-wrap.is-open .rv-select-btn__caret { transform: rotate(180deg); }
+
+.rv-select-menu {
+  display: none;
+  background: var(--rv-surface);
+  border: 1px solid var(--rv-border-strong);
+  border-radius: var(--rv-radius);
+  box-shadow: var(--rv-shadow-lg);
+  padding: 4px;
+}
+.rv-select-menu--portal {
+  display: block;
+  position: fixed;
+  z-index: 130;
+  max-height: min(52vh, 360px);
+  max-width: min(360px, calc(100vw - 16px));
+  overflow-y: auto;
+  animation: rv-menu-in 0.12s ease;
+}
+
+.rv-select-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 7px 9px;
+  border: 0;
+  border-radius: var(--rv-radius-sm);
+  background: transparent;
+  color: var(--rv-text);
+  font: inherit;
+  font-size: 12.5px;
+  text-align: left;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.rv-select-option:hover,
+.rv-select-option:focus-visible { background: var(--rv-surface-sunken); outline: none; }
+.rv-select-option.is-selected {
+  background: var(--rv-accent-soft);
+  color: var(--rv-accent);
+  font-weight: 600;
+}
+.rv-select-option.is-selected::after {
+  content: "";
+  margin-left: auto;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: currentColor;
+}
+.rv-select-option[disabled] { opacity: 0.45; cursor: not-allowed; }
+
+/* ------------------------------------------------------------ form modals */
+.rv-modal--wide { max-width: 640px; }
+.rv-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0 14px;
+}
+.rv-form-grid .rv-field--wide { grid-column: 1 / -1; }
+
+/* Checkboxes span the row and sit in a tinted strip, so the two-column grid
+   never leaves a hole beside a lone toggle. */
+.rv-form-grid .rv-field--toggle {
+  grid-column: 1 / -1;
+  margin-top: 2px;
+  padding: 9px 11px;
+  border: 1px solid var(--rv-border);
+  border-radius: var(--rv-radius);
+  background: var(--rv-surface-alt);
+}
+.rv-check-row {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 12.5px;
+  color: var(--rv-text);
+  cursor: pointer;
+  margin: 0;
+}
+/* Paired fields such as password/confirm must keep two columns; nth-child
+   cannot see the full-width rows above it, so no trailing stretch rule here. */
+@media (max-width: 560px) {
+  .rv-form-grid { grid-template-columns: 1fr; }
+  .rv-check-row { padding-top: 4px; }
+}
+
+/* ------------------------------------------------------------ card images */
+/* Product shots vary wildly in aspect ratio, so the plate is fixed and the
+   image is contained inside it with breathing room on every side. */
+.rv-project-card__media {
+  padding: 12px;
+  background: var(--rv-surface-alt);
+  border-bottom: 1px solid var(--rv-border);
+}
+.rv-project-card__media img {
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  background: transparent;
+  border-radius: var(--rv-radius-sm);
+}
+:root[data-theme="dark"] .rv-project-card__media img {
+  background: #f2f4f8;
+  padding: 4px;
+}
+.rv-project-card:hover .rv-project-card__media img { transform: scale(1.02); }
+.rv-project-card__media img { transition: transform 0.18s ease; }
+
+/* Table thumbnails get the same contained treatment. */
+.rv-thumb-wrap { padding: 2px; background: var(--rv-surface-alt); }
+.rv-thumb-wrap img { object-fit: contain; }
+
+/* ---------------------------------------------------------- permission toggles */
+.rv-switch { display: inline-flex; cursor: pointer; vertical-align: middle; }
+.rv-switch input { position: absolute; opacity: 0; width: 0; height: 0; }
+.rv-switch__track {
+  position: relative;
+  display: inline-block;
+  width: 34px;
+  height: 19px;
+  border-radius: 20px;
+  background: var(--rv-surface-sunken);
+  border: 1px solid var(--rv-border-strong);
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+.rv-switch__knob {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  background: var(--rv-surface);
+  box-shadow: 0 1px 2px rgba(16, 24, 40, 0.3);
+  transition: transform 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.rv-switch input:checked + .rv-switch__track {
+  background: var(--rv-success);
+  border-color: var(--rv-success);
+}
+.rv-switch input:checked + .rv-switch__track .rv-switch__knob { transform: translateX(15px); }
+.rv-switch input:focus-visible + .rv-switch__track { box-shadow: 0 0 0 3px var(--rv-accent-soft); }
+.rv-switch.is-locked { cursor: not-allowed; opacity: 0.6; }
+.rv-switch.is-saving .rv-switch__track { opacity: 0.5; }
+
+.rv-perm-table th.rv-num, .rv-perm-table td.rv-num { text-align: center; width: 110px; }
+.rv-perm-table tbody th { max-width: 260px; }
+.rv-role__meta { display: flex; gap: 6px; flex-wrap: wrap; }
+.rv-role-grid .rv-card__body { padding-top: 10px; padding-bottom: 12px; }
+
+/* ---------------------------------------------------------- bulk selection */
+.rv-project-card { position: relative; }
+.rv-project-card__select {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  z-index: 3;
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: var(--rv-radius-sm);
+  background: var(--rv-surface);
+  border: 1px solid var(--rv-border);
+  box-shadow: var(--rv-shadow-sm);
+  opacity: 0;
+  transition: opacity 0.12s ease;
+  cursor: pointer;
+}
+/* Reveal on hover, keyboard focus, or when already checked. */
+.rv-project-card:hover .rv-project-card__select,
+.rv-project-card__select:focus-within,
+.rv-project-card__select:has(input:checked) { opacity: 1; }
+.rv-project-card:has(.rv-project-card__select input:checked) {
+  border-color: var(--rv-accent);
+  box-shadow: 0 0 0 1px var(--rv-accent);
+}
+
+.rv-selection-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 10px;
+  padding: 8px 12px;
+  border: 1px solid var(--rv-accent-border);
+  border-radius: var(--rv-radius);
+  background: var(--rv-accent-soft);
+  font-size: 12.5px;
+  color: var(--rv-text);
+}
+.rv-selection-bar[hidden] { display: none; }
+.rv-selection-bar__all { display: inline-flex; align-items: center; gap: 7px; cursor: pointer; }
+.rv-selection-bar__count strong { color: var(--rv-accent); font-variant-numeric: tabular-nums; }

@@ -45,6 +45,9 @@ python manage.py ensure_indexes || log "Index creation skipped."
 log "Collecting static files..."
 python manage.py collectstatic --noinput --clear >/dev/null
 
+log "Seeding roles and permissions..."
+python manage.py sync_roles || log "Role sync skipped."
+
 log "Bootstrapping administrator (skipped when APP_ADMIN_* is unset)..."
 python manage.py bootstrap_admin --skip-if-missing || log "Bootstrap skipped; check APP_ADMIN_* and RANKVISTA_SECRET_KEY."
 

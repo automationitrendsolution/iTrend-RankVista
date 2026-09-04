@@ -29,6 +29,10 @@
       <table class="rv-table">
         <thead>
           <tr>
+            <th scope="col" style="width:36px">
+              <input type="checkbox" class="rv-check" data-rv-select-all
+                     aria-label="Select all projects on this page">
+            </th>
             <th scope="col">Project</th>
             <th scope="col">Marketplace</th>
             <th scope="col">Primary ASIN</th>
@@ -40,6 +44,10 @@
         <tbody>
           {% for project in page_obj.items %}
           <tr class="rv-row-link" data-href="{% url 'projects:ranks' project.project_id %}">
+            <td>
+              <input type="checkbox" class="rv-check" data-rv-select-row value="{{ project.project_id }}"
+                     aria-label="Select {{ project.name }}">
+            </td>
             <td>
               <div style="display:flex;align-items:center;gap:10px">
                 <span class="rv-thumb rv-thumb-wrap">

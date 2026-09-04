@@ -27,7 +27,9 @@
            placeholder="Search by name, email or username" aria-label="Search users" autocomplete="off">
   </div>
 
-  <a class="rv-btn rv-btn--primary" href="{% url 'useradmin:user_create' %}">
+  <a class="rv-btn rv-btn--primary" href="{% url 'useradmin:user_create' %}"
+     hx-get="{% url 'useradmin:user_create' %}" hx-target="#rv-modal-root" hx-swap="innerHTML" hx-push-url="false"
+     title="Provision a new platform user">
     <svg aria-hidden="true"><use href="#rv-i-plus"></use></svg> Create User
   </a>
 

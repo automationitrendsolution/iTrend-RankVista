@@ -12,7 +12,7 @@ from django.shortcuts import redirect, render
 from django.urls import reverse
 from django.views.decorators.http import require_POST
 
-from apps.accounts.permissions import login_required
+from apps.accounts.permissions import login_required, page_required
 from apps.analytics import services as analytics
 from apps.asins import repositories as asin_repo
 from apps.common import filters as qp
@@ -26,6 +26,7 @@ from apps.common.constants import (
 from apps.common.dates import format_window_label, resolve_window
 from apps.common.heatmap import legend as heatmap_legend
 from apps.common.sourcedb import SourceUnavailable
+from apps.common.modals import is_modal, redirect_response, render_modal
 from apps.common.pagination import parse_page_request
 from apps.keywords import repositories as keyword_repo
 from apps.projects import repositories as repo
@@ -78,7 +79,7 @@ def _error_page(request: HttpRequest, message: str, status: int = 503) -> HttpRe
 # --------------------------------------------------------------------------
 # Projects grid
 # --------------------------------------------------------------------------
-@login_required
+@page_required("projects.view")
 def project_list(request: HttpRequest) -> HttpResponse:
     search = qp.get_str(request, "q")
     view_mode = qp.get_str(request, "view", "grid", allowed=VIEW_MODES)
@@ -117,7 +118,7 @@ def project_list(request: HttpRequest) -> HttpResponse:
     return render(request, template, context)
 
 
-@login_required
+@page_required("projects.create")
 def project_create(request: HttpRequest) -> HttpResponse:
     form = ProjectForm(request.POST or None)
     if request.method == "POST" and form.is_valid():
@@ -126,15 +127,26 @@ def project_create(request: HttpRequest) -> HttpResponse:
         except SourceUnavailable as exc:
             return _error_page(request, str(exc))
         messages.success(request, f"Project '{project['name']}' created.")
-        return redirect(reverse("projects:detail", args=[project["project_id"]]))
+        target = reverse("projects:detail", args=[project["project_id"]])
+        return redirect_response(target) if is_modal(request) else redirect(target)
+
+    if is_modal(request):
+        return render_modal(
+            request,
+            form=form,
+            action=reverse("projects:create"),
+            title="Create project",
+            subtitle="Track a new product line",
+            submit_label="Create project",
+            wide_fields=("name", "image_url", "tags"),
+            status=422 if request.method == "POST" else 200,
+        )
     return render(
-        request,
-        "projects/partials/project_form.html" if request.htmx else "projects/form.html",
-        {"form": form, "mode": "create", "active_nav": "projects"},
+        request, "projects/form.html", {"form": form, "mode": "create", "active_nav": "projects"}
     )
 
 
-@login_required
+@page_required("projects.edit")
 def project_edit(request: HttpRequest, project_id: int) -> HttpResponse:
     project = require_project(project_id)
     initial = {
@@ -153,16 +165,29 @@ def project_edit(request: HttpRequest, project_id: int) -> HttpResponse:
         except SourceUnavailable as exc:
             return _error_page(request, str(exc))
         messages.success(request, "Project updated.")
-        return redirect(reverse("projects:detail", args=[project_id]))
+        target = reverse("projects:detail", args=[project_id])
+        return redirect_response(target) if is_modal(request) else redirect(target)
+
+    if is_modal(request):
+        return render_modal(
+            request,
+            form=form,
+            action=reverse("projects:edit", args=[project_id]),
+            title="Edit project",
+            subtitle=project.get("name", ""),
+            submit_label="Save changes",
+            wide_fields=("name", "image_url", "tags"),
+            status=422 if request.method == "POST" else 200,
+        )
     return render(
         request,
-        "projects/partials/project_form.html" if request.htmx else "projects/form.html",
+        "projects/form.html",
         {"form": form, "mode": "edit", "project": project, "active_nav": "projects"},
     )
 
 
 @require_POST
-@login_required
+@page_required("projects.archive")
 def project_archive(request: HttpRequest, project_id: int) -> HttpResponse:
     require_project(project_id)
     try:
@@ -205,7 +230,7 @@ def project_detail(request: HttpRequest, project_id: int) -> HttpResponse:
     return redirect(reverse("projects:ranks", args=[project_id]))
 
 
-@login_required
+@page_required("projects.asins")
 def project_asins(request: HttpRequest, project_id: int) -> HttpResponse:
     context = _project_context(request, project_id, "asins")
     page_req = parse_page_request(request)
@@ -256,7 +281,7 @@ def _keyword_page(request: HttpRequest, project_id: int, asin: str):
     return page_req.build(rows, total), rows, sort
 
 
-@login_required
+@page_required("projects.keywords")
 def project_keywords(request: HttpRequest, project_id: int) -> HttpResponse:
     context = _project_context(request, project_id, "keywords")
     asin = context["selected_asin"]
@@ -283,7 +308,7 @@ def project_keywords(request: HttpRequest, project_id: int) -> HttpResponse:
     return _tab_render(request, context, "keywords", "projects/partials/keyword_table.html")
 
 
-@login_required
+@page_required("projects.ranks")
 def project_ranks(request: HttpRequest, project_id: int) -> HttpResponse:
     context = _project_context(request, project_id, "ranks")
     asin = context["selected_asin"]
@@ -320,7 +345,7 @@ def project_ranks(request: HttpRequest, project_id: int) -> HttpResponse:
     return _tab_render(request, context, "ranks", "projects/partials/rank_matrix.html")
 
 
-@login_required
+@page_required("projects.trends")
 def project_trends(request: HttpRequest, project_id: int) -> HttpResponse:
     context = _project_context(request, project_id, "trends")
     asin = context["selected_asin"]

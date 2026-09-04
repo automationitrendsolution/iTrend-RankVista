@@ -10,7 +10,9 @@
   </div>
 
   <div style="display:flex;align-items:center;gap:8px">
-    <a class="rv-btn" href="{% url 'projects:edit' project.project_id %}">
+    <a class="rv-btn" href="{% url 'projects:edit' project.project_id %}"
+       hx-get="{% url 'projects:edit' project.project_id %}" hx-target="#rv-modal-root" hx-swap="innerHTML" hx-push-url="false"
+       title="Rename this project or change its marketplace">
       <svg aria-hidden="true"><use href="#rv-i-edit"></use></svg> Edit Project
     </a>
     <div class="rv-dropdown">
@@ -29,9 +31,6 @@
         </div>
       </div>
     </div>
-    <a class="rv-btn rv-btn--icon" href="{% url 'projects:edit' project.project_id %}" aria-label="Project settings">
-      <svg aria-hidden="true"><use href="#rv-i-settings"></use></svg>
-    </a>
   </div>
 </div>
 

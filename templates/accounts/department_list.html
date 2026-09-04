@@ -26,7 +26,9 @@
            placeholder="Search by name or code" aria-label="Search departments" autocomplete="off">
   </div>
 
-  <a class="rv-btn rv-btn--primary" href="{% url 'useradmin:department_create' %}">
+  <a class="rv-btn rv-btn--primary" href="{% url 'useradmin:department_create' %}"
+     hx-get="{% url 'useradmin:department_create' %}" hx-target="#rv-modal-root" hx-swap="innerHTML" hx-push-url="false"
+     title="Create a new department">
     <svg aria-hidden="true"><use href="#rv-i-plus"></use></svg> Create Department
   </a>
 

@@ -26,7 +26,9 @@
            placeholder="Search projects by name or ASIN" aria-label="Search projects" autocomplete="off">
   </div>
 
-  <a class="rv-btn rv-btn--primary" href="{% url 'projects:create' %}">
+  <a class="rv-btn rv-btn--primary" href="{% url 'projects:create' %}"
+     hx-get="{% url 'projects:create' %}" hx-target="#rv-modal-root" hx-swap="innerHTML" hx-push-url="false"
+     title="Create a new project">
     <svg aria-hidden="true"><use href="#rv-i-plus"></use></svg> Create Project
   </a>
 
@@ -61,6 +63,18 @@
   <input type="hidden" name="view" value="{{ view_mode }}">
   <input type="hidden" name="size" value="{{ page_obj.size }}">
 </form>
+
+<div class="rv-selection-bar" data-rv-selection-bar hidden>
+  <label class="rv-selection-bar__all">
+    <input type="checkbox" class="rv-check" data-rv-select-all aria-label="Select every project on this page">
+    <span>Select all</span>
+  </label>
+  <span class="rv-selection-bar__count">
+    <strong data-rv-selection-count>0</strong> selected
+  </span>
+  <div class="rv-toolbar__spacer"></div>
+  <button type="button" class="rv-btn rv-btn--sm" data-rv-selection-clear>Clear</button>
+</div>
 
 <div id="rv-project-results">
   {% include "projects/partials/project_results.html" %}

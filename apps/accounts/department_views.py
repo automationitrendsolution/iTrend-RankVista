@@ -14,6 +14,7 @@ from apps.accounts.models import Department, Role, User
 from apps.accounts.permissions import super_admin_required
 from apps.audit.models import AuditAction
 from apps.audit.services import record
+from apps.common.modals import is_modal, redirect_response, render_modal
 from apps.common.pagination import parse_page_request
 
 DEPARTMENT_SORT = {
@@ -87,7 +88,20 @@ def department_create(request: HttpRequest) -> HttpResponse:
             detail=department.code,
         )
         messages.success(request, f"Department '{department.name}' created.")
-        return redirect(reverse("useradmin:department_list"))
+        target = reverse("useradmin:department_list")
+        return redirect_response(target) if is_modal(request) else redirect(target)
+
+    if is_modal(request):
+        return render_modal(
+            request,
+            form=form,
+            action=reverse("useradmin:department_create"),
+            title="Create department",
+            subtitle="Group users by team",
+            submit_label="Create department",
+            wide_fields=("description",),
+            status=422 if request.method == "POST" else 200,
+        )
     return render(
         request,
         "accounts/department_form.html",
@@ -103,7 +117,20 @@ def department_edit(request: HttpRequest, pk: str) -> HttpResponse:
         form.save()
         record(AuditAction.DEPARTMENT_UPDATED, request=request, target=department.name)
         messages.success(request, f"Department '{department.name}' updated.")
-        return redirect(reverse("useradmin:department_list"))
+        target = reverse("useradmin:department_list")
+        return redirect_response(target) if is_modal(request) else redirect(target)
+
+    if is_modal(request):
+        return render_modal(
+            request,
+            form=form,
+            action=reverse("useradmin:department_edit", args=[pk]),
+            title="Edit department",
+            subtitle=department.name,
+            submit_label="Save changes",
+            wide_fields=("description",),
+            status=422 if request.method == "POST" else 200,
+        )
     return render(
         request,
         "accounts/department_form.html",
@@ -145,44 +172,3 @@ def department_delete(request: HttpRequest, pk: str) -> HttpResponse:
     record(AuditAction.DEPARTMENT_DELETED, request=request, target=name)
     messages.success(request, f"Department '{name}' deleted. Members were left in place.")
     return redirect(reverse("useradmin:department_list"))
-
-
-@super_admin_required
-def role_list(request: HttpRequest) -> HttpResponse:
-    """Roles are enforced in code; this screen documents them and who holds them."""
-    from apps.accounts.models import ROLE_RANK
-
-    descriptions = {
-        Role.SUPER_ADMIN: "Full platform access, including user and department administration.",
-        Role.ADMIN: "Full access to project, ASIN, keyword and ranking data. No user administration.",
-        Role.USER: "Read and analyse project data. Cannot administer the platform.",
-    }
-    capabilities = {
-        Role.SUPER_ADMIN: ["View all data", "Create & edit projects", "Manage users", "Manage departments"],
-        Role.ADMIN: ["View all data", "Create & edit projects"],
-        Role.USER: ["View all data"],
-    }
-
-    counts = {
-        row["role"]: row["total"]
-        for row in User.objects.filter(is_deleted=False).values("role").annotate(total=Count("id"))
-    }
-
-    roles = [
-        {
-            "value": value,
-            "label": label,
-            "rank": ROLE_RANK.get(value, 0),
-            "description": descriptions.get(value, ""),
-            "capabilities": capabilities.get(value, []),
-            "members": counts.get(value, 0),
-        }
-        for value, label in Role.choices
-    ]
-    roles.sort(key=lambda role: role["rank"], reverse=True)
-
-    return render(
-        request,
-        "accounts/role_list.html",
-        {"roles": roles, "total_users": sum(counts.values()), "active_nav": "roles"},
-    )

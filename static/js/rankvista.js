@@ -162,26 +162,37 @@
   function initTableSelection() {
     $(document).on("change", "[data-rv-select-all]", function () {
       var checked = this.checked;
-      var scope = $(this).closest("table");
-      scope.find("[data-rv-select-row]").prop("checked", checked);
-      updateSelectionCount(scope);
+      var table = $(this).closest("table");
+      // Inside a table select that table; on the toolbar select everything shown.
+      var rows = table.length ? table.find("[data-rv-select-row]") : $("[data-rv-select-row]");
+      rows.prop("checked", checked);
+      updateSelectionCount();
     });
 
-    $(document).on("change", "[data-rv-select-row]", function () {
-      var scope = $(this).closest("table");
-      var rows = scope.find("[data-rv-select-row]");
-      var selected = rows.filter(":checked");
-      scope
-        .find("[data-rv-select-all]")
-        .prop("checked", rows.length === selected.length && rows.length > 0)
-        .prop("indeterminate", selected.length > 0 && selected.length < rows.length);
-      updateSelectionCount(scope);
+    $(document).on("change", "[data-rv-select-row]", updateSelectionCount);
+
+    $(document).on("click", "[data-rv-selection-clear]", function () {
+      $("[data-rv-select-row], [data-rv-select-all]").prop("checked", false).prop("indeterminate", false);
+      updateSelectionCount();
     });
+
+    // A card checkbox must not also open the project.
+    $(document).on("click", ".rv-project-card__select", function (event) {
+      event.stopPropagation();
+    });
+
+    document.body.addEventListener("htmx:afterSwap", updateSelectionCount);
   }
 
-  function updateSelectionCount(scope) {
-    var count = scope.find("[data-rv-select-row]:checked").length;
-    $("[data-rv-selection-count]").text(count).closest("[data-rv-selection-bar]").toggle(count > 0);
+  function updateSelectionCount() {
+    // Cards are not inside a table, so counting is always document-wide.
+    var rows = $("[data-rv-select-row]");
+    var count = rows.filter(":checked").length;
+    $("[data-rv-selection-count]").text(count);
+    $("[data-rv-selection-bar]").prop("hidden", count === 0);
+    $("[data-rv-select-all]")
+      .prop("checked", rows.length > 0 && count === rows.length)
+      .prop("indeterminate", count > 0 && count < rows.length);
   }
 
   /* ----------------------------------------------- sticky matrix sync */
