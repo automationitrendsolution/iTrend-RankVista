@@ -6,8 +6,8 @@ from __future__ import annotations
 # Pagination
 # --------------------------------------------------------------------------
 DEFAULT_PAGE_SIZE = 25
-PAGE_SIZE_CHOICES = (10, 25, 50, 100)
-MAX_PAGE_SIZE = 200
+PAGE_SIZE_CHOICES = (10, 25, 50, 250)
+MAX_PAGE_SIZE = 250
 
 # --------------------------------------------------------------------------
 # Marketplaces

@@ -1,8 +1,9 @@
 """Rank overview KPIs and chart geometry.
-Series are aggregated in Mongo and turned into SVG paths here, so the browser draws only."""
+Series are aggregated in SQL and turned into SVG paths here, so the browser only draws."""
 
 from __future__ import annotations
 
+import json
 from dataclasses import dataclass, field
 from datetime import date
 from typing import Any
@@ -23,16 +24,22 @@ CHART_PADDING = 4
 
 @dataclass(slots=True)
 class Sparkline:
-    """Precomputed SVG geometry for one KPI card chart."""
+    """Precomputed SVG geometry plus the hover payload for one KPI card chart."""
 
     path: str = ""
     area: str = ""
     points: list[tuple[float, float]] = field(default_factory=list)
     axis_labels: tuple[str, str, str] = ("", "", "")
     has_data: bool = False
+    hover: str = "[]"
 
 
-def _sparkline(values: list[float | None], *, invert: bool = False) -> Sparkline:
+def _sparkline(
+    values: list[float | None],
+    *,
+    invert: bool = False,
+    labels: list[str] | None = None,
+) -> Sparkline:
     """Map a numeric series onto the fixed KPI chart box.
     ``invert`` flips the axis so a better (lower) rank sits higher."""
     present = [v for v in values if v is not None]
@@ -46,15 +53,24 @@ def _sparkline(values: list[float | None], *, invert: bool = False) -> Sparkline
     step = usable_w / max(1, len(values) - 1)
 
     points: list[tuple[float, float]] = []
+    hover: list[dict[str, Any]] = []
     for index, value in enumerate(values):
         if value is None:
             continue
         ratio = (value - low) / span
         if not invert:
             ratio = 1 - ratio
-        x = CHART_PADDING + index * step
-        y = CHART_PADDING + ratio * usable_h
-        points.append((round(x, 2), round(y, 2)))
+        x = round(CHART_PADDING + index * step, 2)
+        y = round(CHART_PADDING + ratio * usable_h, 2)
+        points.append((x, y))
+        hover.append(
+            {
+                "x": x,
+                "y": y,
+                "value": round(value, 1),
+                "date": labels[index] if labels and index < len(labels) else "",
+            }
+        )
 
     if len(points) < 2:
         return Sparkline()
@@ -68,7 +84,14 @@ def _sparkline(values: list[float | None], *, invert: bool = False) -> Sparkline
         _axis_label((high + low) / 2),
         _axis_label(low if not invert else high),
     )
-    return Sparkline(path=path, area=area, points=points, axis_labels=(top, mid, bottom), has_data=True)
+    return Sparkline(
+        path=path,
+        area=area,
+        points=points,
+        axis_labels=(top, mid, bottom),
+        has_data=True,
+        hover=json.dumps(hover, separators=(",", ":")),
+    )
 
 
 def _axis_label(value: float) -> str:
@@ -82,6 +105,7 @@ class DistributionColumn:
     label: str
     segments: list[dict[str, Any]]
     total: int
+    hover: str = "[]"
 
 
 def _distribution_columns(series: list[dict[str, Any]]) -> list[DistributionColumn]:
@@ -90,20 +114,31 @@ def _distribution_columns(series: list[dict[str, Any]]) -> list[DistributionColu
         counts = point["distribution"]
         total = sum(counts.values())
         segments = []
-        if total:
-            for spec in RANK_DISTRIBUTION_BUCKETS:
-                count = counts.get(spec["key"], 0)
-                if count:
-                    segments.append(
-                        {
-                            "key": spec["key"],
-                            "tone": spec["tone"],
-                            "count": count,
-                            "height": round(100 * count / total, 2),
-                        }
-                    )
+        for spec in RANK_DISTRIBUTION_BUCKETS:
+            count = counts.get(spec["key"], 0)
+            if count and total:
+                segments.append(
+                    {
+                        "key": spec["key"],
+                        "tone": spec["tone"],
+                        "count": count,
+                        "height": round(100 * count / total, 2),
+                    }
+                )
+        hover = json.dumps(
+            [
+                {"label": spec["label"], "tone": spec["tone"], "count": counts.get(spec["key"], 0)}
+                for spec in reversed(RANK_DISTRIBUTION_BUCKETS)
+            ],
+            separators=(",", ":"),
+        )
         columns.append(
-            DistributionColumn(label=point["date"].strftime("%d %b"), segments=segments, total=total)
+            DistributionColumn(
+                label=point["date"].strftime("%d %b"),
+                segments=segments,
+                total=total,
+                hover=hover,
+            )
         )
     return columns
 
@@ -141,6 +176,7 @@ def _shape_overview(series: list[dict[str, Any]]) -> dict[str, Any]:
     visibility_values = [point["visibility"] for point in series]
     position_values = [point["avg_position"] for point in series]
     badge_values = [float(point["badges"]) for point in series]
+    labels = [point["date"].strftime("%a, %d %b %Y") for point in series]
 
     latest_distribution = series[-1]["distribution"] if series else {}
     distribution_legend = [
@@ -157,15 +193,15 @@ def _shape_overview(series: list[dict[str, Any]]) -> dict[str, Any]:
         "has_data": bool(series),
         "visibility": {
             "value": _latest(series, "visibility") or 0.0,
-            "chart": _sparkline(visibility_values),
+            "chart": _sparkline(visibility_values, labels=labels),
         },
         "average_position": {
             "value": _latest(series, "avg_position"),
-            "chart": _sparkline(position_values, invert=True),
+            "chart": _sparkline(position_values, invert=True, labels=labels),
         },
         "badges": {
             "value": _latest(series, "badges") or 0,
-            "chart": _sparkline(badge_values),
+            "chart": _sparkline(badge_values, labels=labels),
         },
         "distribution": {
             "columns": _distribution_columns(series),

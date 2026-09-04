@@ -26,7 +26,7 @@ def list_users(
     sort: str = DEFAULT_USER_SORT,
     include_deleted: bool = False,
 ) -> QuerySet[User]:
-    qs = User.objects.all()
+    qs = User.objects.select_related("department")
     if not include_deleted:
         qs = qs.filter(is_deleted=False)
 

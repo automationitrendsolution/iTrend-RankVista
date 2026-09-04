@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% load humanize %}
+
+{% block title %}Roles - {{ BRAND.NAME }}{% endblock %}
+
+{% block header %}
+<nav class="rv-breadcrumb" aria-label="Breadcrumb"><span>Administration</span><span aria-hidden="true">/</span><span>Roles</span></nav>
+{% endblock %}
+
+{% block content %}
+<div class="rv-page-head">
+  <h1>Roles</h1>
+  <div class="rv-counters">
+    <span class="rv-counter"><strong>{{ roles|length }}</strong> <span>Roles</span></span>
+    <span class="rv-counter"><strong>{{ total_users|intcomma }}</strong> <span>Assigned users</span></span>
+  </div>
+</div>
+
+<div class="rv-role-grid">
+  {% for role in roles %}
+    <div class="rv-card rv-role">
+      <div class="rv-card__header">
+        <div style="display:flex;align-items:center;gap:9px">
+          <span class="rv-role__badge rv-role__badge--{{ role.value|lower }}">
+            <svg aria-hidden="true"><use href="#rv-i-shield"></use></svg>
+          </span>
+          <div>
+            <h2>{{ role.label }}</h2>
+            <div style="font-size:11px;color:var(--rv-text-subtle)">Privilege level {{ role.rank }}</div>
+          </div>
+        </div>
+        <a class="rv-btn rv-btn--sm" href="{% url 'useradmin:user_list' %}?role={{ role.value }}">
+          {{ role.members|intcomma }} user{{ role.members|pluralize }}
+        </a>
+      </div>
+      <div class="rv-card__body">
+        <p style="margin:0 0 12px;color:var(--rv-text-muted)">{{ role.description }}</p>
+        <ul class="rv-role__caps">
+          {% for capability in role.capabilities %}
+            <li>
+              <svg aria-hidden="true"><use href="#rv-i-check"></use></svg>
+              {{ capability }}
+            </li>
+          {% endfor %}
+        </ul>
+      </div>
+    </div>
+  {% endfor %}
+</div>
+
+<div class="rv-card" style="margin-top:14px">
+  <div class="rv-card__body" style="display:flex;gap:10px;align-items:flex-start">
+    <svg aria-hidden="true" width="17" height="17" style="color:var(--rv-text-subtle);margin-top:1px;flex-shrink:0">
+      <use href="#rv-i-info"></use>
+    </svg>
+    <div style="font-size:12.5px;color:var(--rv-text-muted)">
+      Roles are enforced server-side on every endpoint, so they cannot be bypassed from the browser.
+      Assign a role from the user screen; new roles are added in <code>apps/accounts/models.py</code>
+      and automatically appear here.
+    </div>
+  </div>
+</div>
+{% endblock %}

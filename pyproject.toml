@@ -18,6 +18,7 @@ dependencies = [
     "waitress>=3.0; sys_platform == 'win32'",
     "django-mongodb-backend>=5.2,<5.3",
     "pymysql>=1.2.0",
+    "cryptography>=50.0.1",
 ]
 
 [project.optional-dependencies]

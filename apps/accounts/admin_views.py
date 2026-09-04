@@ -5,7 +5,7 @@ from __future__ import annotations
 
 from django.contrib import messages
 from django.core.exceptions import PermissionDenied
-from django.http import HttpRequest, HttpResponse
+from django.http import Http404, HttpRequest, HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.views.decorators.http import require_POST
@@ -18,8 +18,17 @@ from apps.accounts.selectors import DEFAULT_USER_SORT, list_users, user_stats
 from apps.common.pagination import parse_page_request
 
 
-def _target(request: HttpRequest, pk: int) -> User:
-    """Fetch a user and confirm the actor is allowed to modify it."""
+def _target(request: HttpRequest, pk: str) -> User:
+    """Fetch a user and confirm the actor is allowed to modify it.
+    An unparseable ObjectId is a 404, never a 500."""
+    from bson.errors import InvalidId
+    from bson.objectid import ObjectId
+
+    try:
+        ObjectId(str(pk))
+    except (InvalidId, TypeError):
+        raise Http404("No such user.") from None
+
     user = get_object_or_404(User, pk=pk, is_deleted=False)
     if not services.can_modify(request.user, user):
         raise PermissionDenied("You cannot modify this account.")
@@ -67,7 +76,7 @@ def user_create(request: HttpRequest) -> HttpResponse:
 
 
 @super_admin_required
-def user_edit(request: HttpRequest, pk: int) -> HttpResponse:
+def user_edit(request: HttpRequest, pk: str) -> HttpResponse:
     user = _target(request, pk)
     form = UserUpdateForm(request.POST or None, instance=user)
     if request.method == "POST" and form.is_valid():
@@ -82,7 +91,7 @@ def user_edit(request: HttpRequest, pk: int) -> HttpResponse:
 
 
 @super_admin_required
-def user_password(request: HttpRequest, pk: int) -> HttpResponse:
+def user_password(request: HttpRequest, pk: str) -> HttpResponse:
     user = _target(request, pk)
     form = PasswordResetForm(request.POST or None)
     if request.method == "POST" and form.is_valid():
@@ -103,7 +112,7 @@ def user_password(request: HttpRequest, pk: int) -> HttpResponse:
 
 @require_POST
 @super_admin_required
-def user_toggle_active(request: HttpRequest, pk: int) -> HttpResponse:
+def user_toggle_active(request: HttpRequest, pk: str) -> HttpResponse:
     user = _target(request, pk)
     services.set_active(
         user=user, active=not user.is_active, actor=request.user, request=request
@@ -116,7 +125,7 @@ def user_toggle_active(request: HttpRequest, pk: int) -> HttpResponse:
 
 @require_POST
 @super_admin_required
-def user_delete(request: HttpRequest, pk: int) -> HttpResponse:
+def user_delete(request: HttpRequest, pk: str) -> HttpResponse:
     user = _target(request, pk)
     email = user.email
     services.soft_delete(user=user, actor=request.user, request=request)

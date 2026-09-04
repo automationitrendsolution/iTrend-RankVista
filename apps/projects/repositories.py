@@ -4,10 +4,13 @@ Projects are derived from the ASIN registry; names, tags and status come from th
 from __future__ import annotations
 
 import logging
+from datetime import datetime, timezone
 from typing import Any
 
 from apps.common import sourcedb
 from apps.common.cache import cache_delete, cached_call
+from apps.common.images import product_image
+from apps.common.naming import clean, shorten
 from apps.common.constants import CACHE_TTL_LONG, CACHE_TTL_MEDIUM, DEFAULT_PROJECT_SORT
 from apps.projects import overlay
 
@@ -18,9 +21,16 @@ MongoUnavailable = sourcedb.SourceUnavailable
 CACHE_KEY_ROSTER = "rv:proj:roster:v2"
 CACHE_KEY_USAGE = "rv:usage:counts:v2"
 
+def _as_utc(value: Any) -> datetime:
+    """MySQL returns naive datetimes and Mongo returns aware ones; sorting needs both."""
+    if not isinstance(value, datetime):
+        return datetime.min.replace(tzinfo=timezone.utc)
+    return value if value.tzinfo else value.replace(tzinfo=timezone.utc)
+
+
 SORT_KEYS: dict[str, Any] = {
-    "last_opened": lambda p: p["last_opened_at"] or p["created_at"],
-    "recent": lambda p: p["created_at"],
+    "last_opened": lambda p: _as_utc(p["last_opened_at"] or p["created_at"]),
+    "recent": lambda p: _as_utc(p["created_at"]),
     "name_asc": lambda p: p["name"].lower(),
     "name_desc": lambda p: p["name"].lower(),
     "asins_desc": lambda p: p["asin_count"],
@@ -90,13 +100,15 @@ def _decorate(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
     for row in rows:
         project_id = str(row["project_id"])
         patch = overlays.get(project_id, {})
+        full_title = clean(row.get("display_name"))
         decorated.append(
             {
                 "project_id": project_id,
-                "name": patch.get("name") or row.get("display_name") or f"Project {project_id}",
+                "name": patch.get("name") or shorten(full_title) or f"Project {project_id}",
+                "full_title": full_title,
                 "marketplace": patch.get("marketplace") or "US",
                 "primary_asin": patch.get("primary_asin") or row.get("primary_asin") or "",
-                "image_url": patch.get("image_url") or "",
+                "image_url": patch.get("image_url") or product_image(row.get("primary_asin"), "card"),
                 "brand": row.get("brand") or "",
                 "asin_count": int(row.get("asin_count") or 0),
                 "keyword_count": int(row.get("keyword_count") or 0),
@@ -147,8 +159,7 @@ def list_projects(
     projects = [p for p in _decorate(_roster()) if _matches(p, query)]
 
     key = SORT_KEYS.get(sort, SORT_KEYS[DEFAULT_PROJECT_SORT])
-    projects.sort(key=lambda p: (key(p) is None, key(p) or 0, p["project_id"]),
-                  reverse=sort in DESCENDING)
+    projects.sort(key=lambda p: (key(p), p["project_id"]), reverse=sort in DESCENDING)
 
     return projects[offset : offset + limit], len(projects)
 

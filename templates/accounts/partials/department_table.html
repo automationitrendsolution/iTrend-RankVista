@@ -1,0 +1,74 @@
+{% load rv humanize %}
+<div class="rv-table-wrap">
+  {% if page_obj.is_empty %}
+    <div class="rv-empty">
+      <div class="rv-empty__icon"><svg aria-hidden="true"><use href="#rv-i-building"></use></svg></div>
+      <h3>No departments found</h3>
+      <p>{% if search %}No department matches "{{ search }}".{% else %}Create a department to group users by team.{% endif %}</p>
+      <a class="rv-btn rv-btn--primary" href="{% url 'useradmin:department_create' %}">Create Department</a>
+    </div>
+  {% else %}
+    <div class="rv-scroll">
+      <table class="rv-table">
+        <thead>
+          <tr>
+            <th scope="col">Department</th>
+            <th scope="col">Code</th>
+            <th scope="col">Description</th>
+            <th scope="col" class="rv-num">Members</th>
+            <th scope="col">Status</th>
+            <th scope="col">Created</th>
+            <th scope="col"><span class="rv-visually-hidden">Actions</span></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in page_obj.items %}
+          <tr>
+            <th scope="row" style="font-weight:600">
+              <a href="{% url 'useradmin:department_edit' row.pk %}" style="color:var(--rv-text)">{{ row.name }}</a>
+            </th>
+            <td><span class="rv-badge rv-badge--accent">{{ row.code }}</span></td>
+            <td><span class="rv-truncate" style="max-width:320px;display:block;color:var(--rv-text-muted)">{{ row.description|default:"-" }}</span></td>
+            <td class="rv-num">{{ row.member_total|default:0|intcomma }}</td>
+            <td>
+              <span class="rv-badge {% if row.is_active %}rv-badge--success{% else %}rv-badge--danger{% endif %}">
+                {% if row.is_active %}Active{% else %}Inactive{% endif %}
+              </span>
+            </td>
+            <td>{{ row.created_at|date:"j M Y" }}</td>
+            <td style="text-align:right">
+              <div class="rv-dropdown">
+                <button type="button" class="rv-btn rv-btn--ghost rv-btn--icon rv-btn--sm" data-rv-dropdown
+                        aria-haspopup="true" aria-expanded="false" aria-label="Actions for {{ row.name }}">
+                  <svg aria-hidden="true"><use href="#rv-i-more"></use></svg>
+                </button>
+                <div class="rv-dropdown__menu">
+                  <a class="rv-dropdown__item" href="{% url 'useradmin:department_edit' row.pk %}">
+                    <svg aria-hidden="true"><use href="#rv-i-edit"></use></svg> Edit department
+                  </a>
+                  <form method="post" action="{% url 'useradmin:department_toggle' row.pk %}">
+                    {% csrf_token %}
+                    <button type="submit" class="rv-dropdown__item">
+                      <svg aria-hidden="true"><use href="#rv-i-power"></use></svg>
+                      {% if row.is_active %}Deactivate{% else %}Activate{% endif %}
+                    </button>
+                  </form>
+                  <div class="rv-dropdown__divider"></div>
+                  <form method="post" action="{% url 'useradmin:department_delete' row.pk %}"
+                        onsubmit="return confirm('Delete {{ row.name|escapejs }}? Members keep their accounts but lose this department.')">
+                    {% csrf_token %}
+                    <button type="submit" class="rv-dropdown__item rv-dropdown__item--danger">
+                      <svg aria-hidden="true"><use href="#rv-i-trash"></use></svg> Delete department
+                    </button>
+                  </form>
+                </div>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% include "partials/pagination.html" with target="#rv-department-results" %}
+  {% endif %}
+</div>

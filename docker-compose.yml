@@ -10,9 +10,12 @@ services:
       MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD:-rankvista}
       MONGO_INITDB_DATABASE: ${MONGODB_DATABASE:-rankvista}
     ports:
-      - "${MONGODB_PORT:-27018}:27017"
+      # Loopback only. 27018 so a locally installed mongod on 27017 never clashes.
+      - "${BIND_HOST:-127.0.0.1}:${MONGODB_PORT:-27018}:27017"
     volumes:
       - mongodb_data:/data/db
+      - mongodb_config:/data/configdb
+      - backups:/backups
     healthcheck:
       test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping').ok"]
       interval: 10s
@@ -26,7 +29,7 @@ services:
     restart: unless-stopped
     command: ["redis-server", "--appendonly", "yes", "--save", "60", "1"]
     ports:
-      - "${REDIS_PORT:-6379}:6379"
+      - "${BIND_HOST:-127.0.0.1}:${REDIS_PORT:-6379}:6379"
     volumes:
       - redis_data:/data
     healthcheck:
@@ -39,6 +42,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      target: runtime
     container_name: rankvista-web
     restart: unless-stopped
     env_file:
@@ -47,9 +51,9 @@ services:
       # Container-network defaults; anything set in .env wins.
       MONGODB_URI: ${MONGODB_URI:-mongodb://rankvista:rankvista@mongodb:27017/rankvista?authSource=admin}
       REDIS_URL: ${REDIS_URL:-redis://redis:6379/0}
-      DJANGO_DB_NAME: /app/data/db.sqlite3
     ports:
-      - "${WEB_PORT:-8000}:8000"
+      # Terminate public traffic at a reverse proxy; the app stays on loopback.
+      - "${BIND_HOST:-127.0.0.1}:${WEB_PORT:-8000}:8000"
     volumes:
       - app_data:/app/data
       - static_files:/app/staticfiles
@@ -65,8 +69,33 @@ services:
       retries: 5
       start_period: 40s
 
+  # On-demand backup into the `backups` volume. Never starts with `up`:
+  #   docker compose --profile tools run --rm backup
+  backup:
+    image: mongo:7
+    profiles: ["tools"]
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    volumes:
+      - backups:/backups
+    entrypoint:
+      - sh
+      - -c
+      - |
+        set -e
+        STAMP=$$(date +%Y%m%d-%H%M%S)
+        echo "Dumping ${MONGODB_DATABASE:-rankvista} to /backups/$$STAMP"
+        mongodump \
+          --uri "mongodb://${MONGO_ROOT_USERNAME:-rankvista}:${MONGO_ROOT_PASSWORD:-rankvista}@mongodb:27017/${MONGODB_DATABASE:-rankvista}?authSource=admin" \
+          --out "/backups/$$STAMP" --gzip
+        echo "Backup complete: /backups/$$STAMP"
+        ls -1 /backups
+
 volumes:
   mongodb_data:
+  mongodb_config:
   redis_data:
   app_data:
   static_files:
+  backups:

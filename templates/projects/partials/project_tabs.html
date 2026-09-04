@@ -1,0 +1,29 @@
+{% load humanize %}
+{% comment %}Tab bar. Rendered out-of-band on a panel swap so the active state follows.{% endcomment %}
+<nav class="rv-tabs" aria-label="Project sections" id="rv-project-tabs"
+     {% if oob %}hx-swap-oob="true"{% endif %}>
+  <a class="rv-tab {% if tab == 'asins' %}is-active{% endif %}"
+     href="{% url 'projects:asins' project.project_id %}?asin={{ selected_asin }}"
+     hx-get="{% url 'projects:asins' project.project_id %}?asin={{ selected_asin }}"
+     hx-target="#rv-tab-panel" hx-swap="innerHTML" hx-push-url="true" data-rv-skeleton="panel"
+     {% if tab == 'asins' %}aria-current="page"{% endif %}>
+    ASINs <span class="rv-tab__count">{{ asin_count|intcomma }}</span>
+  </a>
+  <a class="rv-tab {% if tab == 'keywords' %}is-active{% endif %}"
+     href="{% url 'projects:keywords' project.project_id %}?asin={{ selected_asin }}"
+     hx-get="{% url 'projects:keywords' project.project_id %}?asin={{ selected_asin }}"
+     hx-target="#rv-tab-panel" hx-swap="innerHTML" hx-push-url="true" data-rv-skeleton="panel"
+     {% if tab == 'keywords' %}aria-current="page"{% endif %}>
+    Keywords <span class="rv-tab__count">{{ keyword_count|intcomma }}</span>
+  </a>
+  <a class="rv-tab {% if tab == 'ranks' %}is-active{% endif %}"
+     href="{% url 'projects:ranks' project.project_id %}?asin={{ selected_asin }}"
+     hx-get="{% url 'projects:ranks' project.project_id %}?asin={{ selected_asin }}"
+     hx-target="#rv-tab-panel" hx-swap="innerHTML" hx-push-url="true" data-rv-skeleton="panel"
+     {% if tab == 'ranks' %}aria-current="page"{% endif %}>Ranks</a>
+  <a class="rv-tab {% if tab == 'trends' %}is-active{% endif %}"
+     href="{% url 'projects:trends' project.project_id %}?asin={{ selected_asin }}"
+     hx-get="{% url 'projects:trends' project.project_id %}?asin={{ selected_asin }}"
+     hx-target="#rv-tab-panel" hx-swap="innerHTML" hx-push-url="true" data-rv-skeleton="panel"
+     {% if tab == 'trends' %}aria-current="page"{% endif %}>Trends</a>
+</nav>

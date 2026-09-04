@@ -1,12 +1,12 @@
 {% load rv humanize %}
-{% comment %}Project detail header and primary tab bar, shared by every tab.{% endcomment %}
+{% comment %}Project header and tab bar. Tabs swap #rv-tab-panel instead of reloading.{% endcomment %}
 <div class="rv-page-head" style="margin-bottom:12px">
   <div style="display:flex;align-items:center;gap:10px;min-width:0">
     <a class="rv-btn rv-btn--ghost rv-btn--icon" href="{% url 'projects:list' %}" aria-label="Back to projects">
       <svg aria-hidden="true"><use href="#rv-i-back"></use></svg>
     </a>
     <span class="rv-flag rv-flag--lg" title="{{ market.label }}">{{ market.code }}</span>
-    <h1 class="rv-truncate" style="max-width:44vw">{{ project.name }}</h1>
+    <h1 class="rv-project-title" title="{{ project.full_title|default:project.name }}">{{ project.name }}</h1>
   </div>
 
   <div style="display:flex;align-items:center;gap:8px">
@@ -23,10 +23,9 @@
           <div><strong style="color:var(--rv-text)">Project ID</strong><br>{{ project.project_id }}</div>
           <div><strong style="color:var(--rv-text)">Primary ASIN</strong><br><span class="rv-mono">{{ project.primary_asin }}</span></div>
           <div><strong style="color:var(--rv-text)">Marketplace</strong><br>{{ market.label }}{% if market.domain %} ({{ market.domain }}){% endif %}</div>
-          <div><strong style="color:var(--rv-text)">Created</strong><br>{{ project.created_at|date:"j M Y" }}</div>
-          {% if project.tags %}
-            <div><strong style="color:var(--rv-text)">Tags</strong><br>{{ project.tags|join:", " }}</div>
-          {% endif %}
+          {% if project.brand %}<div><strong style="color:var(--rv-text)">Brand</strong><br>{{ project.brand }}</div>{% endif %}
+          <div><strong style="color:var(--rv-text)">First seen</strong><br>{{ project.created_at|date:"j M Y"|default:"-" }}</div>
+          {% if project.tags %}<div><strong style="color:var(--rv-text)">Tags</strong><br>{{ project.tags|join:", " }}</div>{% endif %}
         </div>
       </div>
     </div>
@@ -36,21 +35,4 @@
   </div>
 </div>
 
-<nav class="rv-tabs" aria-label="Project sections">
-  <a class="rv-tab {% if tab == 'asins' %}is-active{% endif %}"
-     href="{% url 'projects:asins' project.project_id %}?asin={{ selected_asin }}"
-     {% if tab == 'asins' %}aria-current="page"{% endif %}>
-    ASINs <span class="rv-tab__count">{{ asin_count|intcomma }}</span>
-  </a>
-  <a class="rv-tab {% if tab == 'keywords' %}is-active{% endif %}"
-     href="{% url 'projects:keywords' project.project_id %}?asin={{ selected_asin }}"
-     {% if tab == 'keywords' %}aria-current="page"{% endif %}>
-    Keywords <span class="rv-tab__count">{{ keyword_count|intcomma }}</span>
-  </a>
-  <a class="rv-tab {% if tab == 'ranks' %}is-active{% endif %}"
-     href="{% url 'projects:ranks' project.project_id %}?asin={{ selected_asin }}"
-     {% if tab == 'ranks' %}aria-current="page"{% endif %}>Ranks</a>
-  <a class="rv-tab {% if tab == 'trends' %}is-active{% endif %}"
-     href="{% url 'projects:trends' project.project_id %}?asin={{ selected_asin }}"
-     {% if tab == 'trends' %}aria-current="page"{% endif %}>Trends</a>
-</nav>
+{% include "projects/partials/project_tabs.html" %}

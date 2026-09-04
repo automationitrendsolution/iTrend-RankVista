@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% load rv %}
+
+{% block title %}Departments - {{ BRAND.NAME }}{% endblock %}
+
+{% block header %}
+<nav class="rv-breadcrumb" aria-label="Breadcrumb"><span>Administration</span><span aria-hidden="true">/</span><span>Departments</span></nav>
+{% endblock %}
+
+{% block content %}
+<div class="rv-page-head">
+  <h1>Departments</h1>
+  <div class="rv-counters">
+    <span class="rv-counter"><strong>{{ stats.total }}</strong> <span>Departments</span></span>
+    <span class="rv-counter"><strong>{{ stats.active }}</strong> <span>Active</span></span>
+    <span class="rv-counter"><strong>{{ stats.unassigned }}</strong> <span>Unassigned users</span></span>
+  </div>
+</div>
+
+<form class="rv-toolbar" method="get" role="search"
+      hx-get="{% url 'useradmin:department_list' %}" hx-target="#rv-department-results" hx-push-url="true"
+      hx-trigger="submit, input from:#rv-dept-search delay:350ms, change from:select">
+  <div class="rv-search">
+    <svg aria-hidden="true"><use href="#rv-i-search"></use></svg>
+    <input type="search" class="rv-input" id="rv-dept-search" name="q" value="{{ search }}"
+           placeholder="Search by name or code" aria-label="Search departments" autocomplete="off">
+  </div>
+
+  <a class="rv-btn rv-btn--primary" href="{% url 'useradmin:department_create' %}">
+    <svg aria-hidden="true"><use href="#rv-i-plus"></use></svg> Create Department
+  </a>
+
+  <div class="rv-toolbar__spacer"></div>
+
+  <select class="rv-select" name="status" aria-label="Filter by status" style="width:auto">
+    <option value="">All statuses</option>
+    <option value="active" {% if status == 'active' %}selected{% endif %}>Active</option>
+    <option value="inactive" {% if status == 'inactive' %}selected{% endif %}>Inactive</option>
+  </select>
+  <select class="rv-select" name="sort" aria-label="Sort departments" style="width:auto">
+    <option value="name" {% if sort == 'name' %}selected{% endif %}>Name A-Z</option>
+    <option value="-name" {% if sort == '-name' %}selected{% endif %}>Name Z-A</option>
+    <option value="-members" {% if sort == '-members' %}selected{% endif %}>Most members</option>
+    <option value="recent" {% if sort == 'recent' %}selected{% endif %}>Recently created</option>
+  </select>
+  <input type="hidden" name="size" value="{{ page_obj.size }}">
+</form>
+
+<div id="rv-department-results">
+  {% include "accounts/partials/department_table.html" %}
+</div>
+{% endblock %}

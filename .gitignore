@@ -5,6 +5,7 @@
 # --- Secrets & local configuration ------------------------------------------
 .env
 .env.*
+.env.key
 !.env.example
 *.pem
 *.key

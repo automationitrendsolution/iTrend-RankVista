@@ -11,6 +11,8 @@ from dotenv import load_dotenv
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+# The encryption key lives outside .env so the credential file alone is useless.
+load_dotenv(BASE_DIR / ".env.key")
 load_dotenv(BASE_DIR / ".env")
 
 
@@ -30,6 +32,13 @@ def env_int(key: str, default: int) -> int:
         return int(os.environ.get(key) or default)
     except (TypeError, ValueError):
         return default
+
+
+def env_secret(key: str, default: str = "") -> str:
+    """Read a credential, decrypting an `enc:` value produced by `manage.py secrets_tool`."""
+    from apps.common.secrets import resolve
+
+    return resolve(os.environ.get(key, default))
 
 
 def env_list(key: str, default: str = "") -> list[str]:
@@ -111,7 +120,7 @@ WSGI_APPLICATION = "config.wsgi.application"
 
 # MongoDB is the only datastore: Django ORM (auth, sessions, audit) runs on the
 # official django-mongodb-backend; analytics collections use the repositories.
-MONGODB_URI = env("MONGODB_URI", "mongodb://127.0.0.1:27017/")
+MONGODB_URI = env_secret("MONGODB_URI", "mongodb://127.0.0.1:27017/")
 MONGODB_DATABASE = env("MONGODB_DATABASE", "rankvista")
 
 DATABASES = {
@@ -145,7 +154,7 @@ SOURCE_DB = {
     "HOST": env("SOURCE_DB_HOST"),
     "PORT": env_int("SOURCE_DB_PORT", 3306),
     "USER": env("SOURCE_DB_USER"),
-    "PASSWORD": env("SOURCE_DB_PASSWORD"),
+    "PASSWORD": env_secret("SOURCE_DB_PASSWORD"),
     "NAME": env("SOURCE_DB_NAME"),
     "TIMEOUT": env_int("SOURCE_DB_TIMEOUT", 15),
     "READ_TIMEOUT": env_int("SOURCE_DB_READ_TIMEOUT", 60),
@@ -159,7 +168,7 @@ SOURCE_DB = {
 }
 
 # Cache: Redis, degrading to local memory when unreachable.
-REDIS_URL = env("REDIS_URL", "redis://127.0.0.1:6379/0")
+REDIS_URL = env_secret("REDIS_URL", "redis://127.0.0.1:6379/0")
 CACHE_TIMEOUT_SECONDS = env_int("CACHE_TIMEOUT_SECONDS", 300)
 
 if REDIS_URL:

@@ -22,6 +22,32 @@ ROLE_RANK: dict[str, int] = {
 }
 
 
+class Department(models.Model):
+    """An organisational unit a user belongs to. Managed from the admin UI."""
+
+    name = models.CharField(max_length=120, unique=True)
+    code = models.CharField(max_length=24, unique=True)
+    description = models.CharField(max_length=300, blank=True)
+    is_active = models.BooleanField(default=True, db_index=True)
+    created_at = models.DateTimeField(default=timezone.now)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["name"]
+
+    def __str__(self) -> str:
+        return self.name
+
+    def save(self, *args, **kwargs):
+        self.code = self.code.strip().upper()
+        self.name = self.name.strip()
+        super().save(*args, **kwargs)
+
+    @property
+    def member_count(self) -> int:
+        return self.members.filter(is_deleted=False).count()
+
+
 class UserManager(BaseUserManager):
     """Manager that normalises email and always hashes passwords."""
 
@@ -76,6 +102,15 @@ class User(AbstractBaseUser, PermissionsMixin):
     date_joined = models.DateTimeField(default=timezone.now)
     deactivated_at = models.DateTimeField(null=True, blank=True)
     last_login_ip = models.GenericIPAddressField(null=True, blank=True)
+
+    department = models.ForeignKey(
+        Department,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="members",
+    )
+    job_title = models.CharField(max_length=120, blank=True)
 
     created_by = models.ForeignKey(
         "self", null=True, blank=True, on_delete=models.SET_NULL, related_name="created_users"

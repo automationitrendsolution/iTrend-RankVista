@@ -8,7 +8,8 @@
            title="Share of tracked keywords ranking in the top 10"><use href="#rv-i-info"></use></svg>
     </div>
     <div class="rv-kpi__value">{{ overview.visibility.value|floatformat:0 }}%</div>
-    <div class="rv-kpi__chart">
+    <div class="rv-kpi__chart" data-points="{{ overview.visibility.chart.hover }}"
+         data-label="Visibility" data-unit="%">
       {% if overview.visibility.chart.has_data %}
         <svg viewBox="0 0 240 64" preserveAspectRatio="none" role="img" aria-label="Visibility trend">
           <path class="rv-spark__area" d="{{ overview.visibility.chart.area }}"/>
@@ -34,7 +35,8 @@
     <div class="rv-kpi__value">
       {% if overview.average_position.value %}{{ overview.average_position.value|floatformat:1 }}{% else %}-{% endif %}
     </div>
-    <div class="rv-kpi__chart">
+    <div class="rv-kpi__chart" data-points="{{ overview.average_position.chart.hover }}"
+         data-label="Avg position" data-unit="">
       {% if overview.average_position.chart.has_data %}
         <svg viewBox="0 0 240 64" preserveAspectRatio="none" role="img" aria-label="Average position trend">
           <path class="rv-spark__area" d="{{ overview.average_position.chart.area }}"/>
@@ -58,7 +60,8 @@
            title="Keywords holding the Amazon's Choice badge"><use href="#rv-i-info"></use></svg>
     </div>
     <div class="rv-kpi__value">{{ overview.badges.value|intcomma }}</div>
-    <div class="rv-kpi__chart">
+    <div class="rv-kpi__chart" data-points="{{ overview.badges.chart.hover }}"
+         data-label="Badges" data-unit="">
       {% if overview.badges.chart.has_data %}
         <svg viewBox="0 0 240 64" preserveAspectRatio="none" role="img" aria-label="Badge count trend">
           <path class="rv-spark__area" d="{{ overview.badges.chart.area }}"/>
@@ -84,7 +87,7 @@
     <div class="rv-dist">
       <div class="rv-dist__chart" role="img" aria-label="Rank distribution over time">
         {% for column in overview.distribution.columns %}
-          <div class="rv-dist__col" title="{{ column.label }}: {{ column.total }} ranked">
+          <div class="rv-dist__col" data-date="{{ column.label }}" data-buckets="{{ column.hover }}">
             {% for segment in column.segments %}
               <div class="rv-dist__seg rv-dist__seg--{{ segment.tone }}"
                    style="height:{{ segment.height }}%"></div>

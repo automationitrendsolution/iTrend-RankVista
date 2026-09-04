@@ -1,15 +1,27 @@
-"""Shared fixtures. Mongo-backed tests run against an isolated throwaway database."""
+"""Shared fixtures.
+Warehouse-backed tests run read-only against the configured source and skip when absent."""
 
 from __future__ import annotations
 
-import os
-import uuid
-from datetime import datetime, timedelta, timezone
-
 import pytest
+from django.core.cache import cache
 from django.test import Client
 
 from apps.accounts.models import Role, User
+
+
+@pytest.fixture(autouse=True)
+def clear_cache(settings):
+    """Isolate cached warehouse aggregates so one test never leaks into the next."""
+    settings.CACHES = {
+        "default": {
+            "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+            "LOCATION": "rankvista-tests",
+        }
+    }
+    cache.clear()
+    yield
+    cache.clear()
 
 
 @pytest.fixture
@@ -66,109 +78,32 @@ def client_as_user(client: Client, normal_user: User) -> Client:
 
 
 @pytest.fixture
-def mongo_db(settings):
-    """Point the repositories at a disposable database, dropped after the test."""
-    from apps.common import mongo
+def warehouse():
+    """Skip the test unless the read-only rank warehouse is reachable."""
+    from apps.common import sourcedb
 
-    pytest.importorskip("pymongo")
-    mongo.reset_client()
-    if not mongo.ping():
-        pytest.skip("MongoDB is not reachable; skipping data-layer test.")
-
-    name = f"rankvista_test_{uuid.uuid4().hex[:10]}"
-    settings.MONGODB = {**settings.MONGODB, "DATABASE": name}
-    mongo.reset_client()
-
-    from apps.common.schema import ensure_indexes
-
-    ensure_indexes()
-    yield mongo.get_database()
-
-    mongo.get_client().drop_database(name)
-    mongo.reset_client()
+    if not sourcedb.is_enabled():
+        pytest.skip("SOURCE_DB is not configured.")
+    if not sourcedb.ping():
+        pytest.skip("The rank warehouse is unreachable.")
+    return sourcedb
 
 
 @pytest.fixture
-def seeded_project(mongo_db):
-    """One project with one ASIN, three keywords and ten days of ranks."""
-    from apps.common.schema import ASINS, KEYWORDS, PROJECTS, RANKINGS
+def live_project(warehouse, db):
+    """The busiest real project, with its primary ASIN. Read-only."""
+    from apps.asins import repositories as asin_repo
+    from apps.projects import repositories as repo
 
-    now = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
-    project_id, asin = 90001, "B0TESTASIN"
-
-    mongo_db[PROJECTS].insert_one(
-        {
-            "project_id": project_id,
-            "name": "Test Snow Cover",
-            "name_lower": "test snow cover",
-            "marketplace": "US",
-            "primary_asin": asin,
-            "image_url": "",
-            "asin_count": 1,
-            "keyword_count": 3,
-            "status": "active",
-            "owner_id": None,
-            "tags": [],
-            "created_at": now,
-            "updated_at": now,
-            "last_opened_at": now,
-        }
+    projects, total = repo.list_projects(
+        query=repo.build_filter(), sort="keywords_desc", offset=0, limit=1
     )
-    mongo_db[ASINS].insert_one(
-        {
-            "project_id": project_id,
-            "asin": asin,
-            "title": "Test Windshield Cover",
-            "image_url": "",
-            "marketplace": "US",
-            "brand": "iTrend Labs",
-            "price": 24.99,
-            "is_primary": True,
-            "status": "active",
-            "tracked_keyword_count": 3,
-            "created_at": now,
-            "updated_at": now,
-        }
-    )
+    if not projects:
+        pytest.skip("The warehouse holds no projects.")
 
-    keywords = [
-        ("snow cover", 12, 250.0, 18.5, 2),
-        ("windshield cover", 5, -20.0, 9.1, 14),
-        ("ice cover", 0, 0.0, 0.0, 88),
-    ]
-    for keyword, sales, trend, conversion, rank in keywords:
-        mongo_db[KEYWORDS].insert_one(
-            {
-                "project_id": project_id,
-                "asin": asin,
-                "keyword": keyword,
-                "keyword_lower": keyword,
-                "search_volume": 5000,
-                "kw_sales": sales,
-                "sales_trend_pct": trend,
-                "conversion_pct": conversion,
-                "is_tracked": True,
-                "current_rank": rank,
-                "best_rank": rank,
-                "created_at": now,
-                "updated_at": now,
-            }
-        )
-        mongo_db[RANKINGS].insert_many(
-            [
-                {
-                    "project_id": project_id,
-                    "asin": asin,
-                    "keyword": keyword,
-                    "keyword_lower": keyword,
-                    "date": now - timedelta(days=offset),
-                    "rank": rank + offset,
-                    "is_amazon_choice": offset == 0 and rank <= 3,
-                    "is_sponsored": False,
-                    "page": 1,
-                }
-                for offset in range(10)
-            ]
-        )
+    project = projects[0]
+    asin = asin_repo.default_asin(project["project_id"])
+    if not asin:
+        pytest.skip("The selected project has no ASINs.")
 
-    return {"project_id": project_id, "asin": asin}
+    return {"project_id": project["project_id"], "asin": asin, "project": project, "total": total}

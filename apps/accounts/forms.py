@@ -8,7 +8,7 @@ from django.contrib.auth import authenticate
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
 
-from apps.accounts.models import Role, User
+from apps.accounts.models import Department, Role, User
 
 INPUT_CLASS = "rv-input"
 
@@ -69,6 +69,44 @@ class LoginForm(forms.Form):
         return cleaned
 
 
+class DepartmentForm(forms.ModelForm):
+    """Create or edit an organisational department."""
+
+    class Meta:
+        model = Department
+        fields = ["name", "code", "description", "is_active"]
+        widgets = {
+            "name": forms.TextInput(attrs={"class": INPUT_CLASS, "placeholder": "Search Operations"}),
+            "code": forms.TextInput(attrs={"class": INPUT_CLASS, "placeholder": "SEO", "maxlength": "24"}),
+            "description": forms.TextInput(
+                attrs={"class": INPUT_CLASS, "placeholder": "What this team is responsible for"}
+            ),
+            "is_active": forms.CheckboxInput(attrs={"class": "rv-check"}),
+        }
+
+    def clean_code(self) -> str:
+        code = self.cleaned_data["code"].strip().upper()
+        if not code.isalnum():
+            raise ValidationError("A department code is letters and digits only.")
+        clash = Department.objects.filter(code__iexact=code)
+        if self.instance.pk:
+            clash = clash.exclude(pk=self.instance.pk)
+        if clash.exists():
+            raise ValidationError("This department code is already in use.")
+        return code
+
+    def clean_name(self) -> str:
+        name = self.cleaned_data["name"].strip()
+        if len(name) < 2:
+            raise ValidationError("A department name needs at least 2 characters.")
+        clash = Department.objects.filter(name__iexact=name)
+        if self.instance.pk:
+            clash = clash.exclude(pk=self.instance.pk)
+        if clash.exists():
+            raise ValidationError("A department with this name already exists.")
+        return name
+
+
 class UserCreateForm(forms.ModelForm):
     """Create a platform user with a validated initial password."""
 
@@ -83,14 +121,22 @@ class UserCreateForm(forms.ModelForm):
 
     class Meta:
         model = User
-        fields = ["email", "username", "full_name", "role", "is_active"]
+        fields = ["email", "username", "full_name", "role", "department", "job_title", "is_active"]
         widgets = {
             "email": forms.EmailInput(attrs={"class": INPUT_CLASS, "placeholder": "user@company.com"}),
             "username": forms.TextInput(attrs={"class": INPUT_CLASS, "placeholder": "jdoe"}),
             "full_name": forms.TextInput(attrs={"class": INPUT_CLASS, "placeholder": "Jane Doe"}),
             "role": forms.Select(attrs={"class": "rv-select"}),
+            "department": forms.Select(attrs={"class": "rv-select"}),
+            "job_title": forms.TextInput(attrs={"class": INPUT_CLASS, "placeholder": "Search Analyst"}),
             "is_active": forms.CheckboxInput(attrs={"class": "rv-check"}),
         }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Only active departments can be assigned to a user.
+        self.fields["department"].queryset = Department.objects.filter(is_active=True)
+        self.fields["department"].empty_label = "No department"
 
     def clean_email(self) -> str:
         email = self.cleaned_data["email"].lower().strip()
@@ -129,8 +175,14 @@ class UserUpdateForm(forms.ModelForm):
 
     class Meta:
         model = User
-        fields = ["email", "username", "full_name", "role", "is_active"]
+        fields = ["email", "username", "full_name", "role", "department", "job_title", "is_active"]
         widgets = UserCreateForm.Meta.widgets
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Only active departments can be assigned to a user.
+        self.fields["department"].queryset = Department.objects.filter(is_active=True)
+        self.fields["department"].empty_label = "No department"
 
     def clean_email(self) -> str:
         email = self.cleaned_data["email"].lower().strip()

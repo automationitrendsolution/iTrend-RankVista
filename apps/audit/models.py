@@ -23,6 +23,9 @@ class AuditAction(models.TextChoices):
     PROJECT_CREATED = "PROJECT_CREATED", "Project created"
     PROJECT_UPDATED = "PROJECT_UPDATED", "Project updated"
     PROJECT_DELETED = "PROJECT_DELETED", "Project deleted"
+    DEPARTMENT_CREATED = "DEPARTMENT_CREATED", "Department created"
+    DEPARTMENT_UPDATED = "DEPARTMENT_UPDATED", "Department updated"
+    DEPARTMENT_DELETED = "DEPARTMENT_DELETED", "Department deleted"
 
 
 class AuditLog(models.Model):

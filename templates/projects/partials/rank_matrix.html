@@ -65,7 +65,7 @@
             </td>
             <td class="rv-sticky rv-sticky--m3"><span class="rv-matrix__metric">{{ row.conversion_pct|floatformat:1 }}%</span></td>
             {% for cell in row.cells %}
-              <td class="rv-matrix__date"><span class="{{ cell.css }}" title="{{ cell.title }}">{{ cell.label }}</span></td>
+              <td class="rv-matrix__date"><span class="{{ cell.css }}" data-tip="{{ cell.title }}">{{ cell.label }}</span></td>
             {% endfor %}
           </tr>
           {% endfor %}

@@ -78,4 +78,9 @@ def test_toggle_and_delete_require_post(client_as_super, normal_user):
 
 
 def test_missing_user_returns_404(client_as_super):
-    assert client_as_super.get(reverse("useradmin:user_edit", args=[999999])).status_code == 404
+    absent = "0" * 24  # a well-formed ObjectId that matches no document
+    assert client_as_super.get(reverse("useradmin:user_edit", args=[absent])).status_code == 404
+
+
+def test_malformed_user_id_returns_404(client_as_super):
+    assert client_as_super.get(reverse("useradmin:user_edit", args=["not-an-id"])).status_code == 404

@@ -9,6 +9,7 @@ from typing import Any
 from apps.common import sourcedb
 from apps.common.cache import cached_call
 from apps.common.constants import CACHE_TTL_MEDIUM
+from apps.common.images import product_image
 
 logger = logging.getLogger("rankvista.asins")
 
@@ -77,7 +78,7 @@ def _load_project_asins(project_id: str) -> list[dict[str, Any]]:
                 "project_id": project_id,
                 "asin": row["asin"],
                 "title": row.get("title") or "",
-                "image_url": "",
+                "image_url": product_image(row["asin"], "thumb"),
                 "marketplace": "US",
                 "brand": row.get("brand") or "",
                 "price": None,

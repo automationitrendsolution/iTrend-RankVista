@@ -1,0 +1,72 @@
+{% comment %}Skeleton markup injected into a target while its HTMX request is in flight.{% endcomment %}
+<template id="rv-skeleton-grid">
+  <div class="rv-grid">
+    {% for _ in "12345678" %}
+      <div class="rv-skeleton-card">
+        <div class="rv-skeleton rv-skeleton--media"></div>
+        <div class="rv-skeleton-card__body">
+          <div class="rv-skeleton rv-skeleton--text" style="width:88%"></div>
+          <div class="rv-skeleton rv-skeleton--text" style="width:62%"></div>
+          <div class="rv-skeleton rv-skeleton--text" style="width:44%;height:9px"></div>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+</template>
+
+<template id="rv-skeleton-table">
+  <div class="rv-table-wrap">
+    <div class="rv-skeleton-table">
+      <div class="rv-skeleton-table__head">
+        {% for _ in "12345" %}<div class="rv-skeleton rv-skeleton--text" style="width:70%"></div>{% endfor %}
+      </div>
+      {% for _ in "12345678" %}
+        <div class="rv-skeleton-table__row">
+          {% for _ in "12345" %}<div class="rv-skeleton rv-skeleton--text"></div>{% endfor %}
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+</template>
+
+<template id="rv-skeleton-matrix">
+  <div class="rv-table-wrap">
+    <div class="rv-skeleton-matrix">
+      {% for _ in "123456789012" %}
+        <div class="rv-skeleton-matrix__row">
+          <div class="rv-skeleton rv-skeleton--cell" style="width:240px"></div>
+          <div class="rv-skeleton rv-skeleton--cell" style="width:76px"></div>
+          <div class="rv-skeleton rv-skeleton--cell" style="width:88px"></div>
+          <div class="rv-skeleton rv-skeleton--cell" style="width:76px"></div>
+          {% for _ in "123456789012345678" %}
+            <div class="rv-skeleton rv-skeleton--cell" style="width:42px"></div>
+          {% endfor %}
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+</template>
+
+<template id="rv-skeleton-panel">
+  <div class="rv-skeleton-panel">
+    <div class="rv-skeleton-panel__toolbar">
+      <div class="rv-skeleton rv-skeleton--control" style="width:280px"></div>
+      <div class="rv-skeleton rv-skeleton--control" style="width:110px"></div>
+      <div style="flex:1"></div>
+      <div class="rv-skeleton rv-skeleton--control" style="width:140px"></div>
+      <div class="rv-skeleton rv-skeleton--control" style="width:150px"></div>
+    </div>
+    <div class="rv-kpis">
+      {% for _ in "1234" %}<div class="rv-skeleton rv-skeleton--kpi"></div>{% endfor %}
+    </div>
+    <div class="rv-table-wrap">
+      <div class="rv-skeleton-table">
+        {% for _ in "12345678" %}
+          <div class="rv-skeleton-table__row">
+            {% for _ in "123456" %}<div class="rv-skeleton rv-skeleton--text"></div>{% endfor %}
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</template>

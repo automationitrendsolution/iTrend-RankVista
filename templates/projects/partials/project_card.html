@@ -5,20 +5,22 @@
   </div>
 
   <a class="rv-project-card__link" href="{% url 'projects:detail' project.project_id %}"
+     hx-get="{% url 'projects:quickview' project.project_id %}" hx-target="#rv-modal-root"
      aria-label="Open {{ project.name }}"></a>
 
+  {% comment %}The placeholder sits underneath; a failed image removes itself.{% endcomment %}
   <div class="rv-project-card__media">
+    <svg class="rv-media-fallback" aria-hidden="true" width="34" height="34">
+      <use href="#rv-i-box"></use>
+    </svg>
     {% if project.image_url %}
-      <img src="{{ project.image_url }}" alt="" loading="lazy" decoding="async">
-    {% else %}
-      <svg aria-hidden="true" width="40" height="40" style="color:var(--rv-border-strong)">
-        <use href="#rv-i-box"></use>
-      </svg>
+      <img src="{{ project.image_url }}" alt="" loading="lazy" decoding="async"
+           onerror="this.remove()">
     {% endif %}
   </div>
 
   <div class="rv-project-card__body">
-    <h3 class="rv-project-card__title">{{ project.name }}</h3>
+    <h3 class="rv-project-card__title" title="{{ project.full_title|default:project.name }}">{{ project.name }}</h3>
     <div class="rv-project-card__asin">
       <span class="rv-flag" title="{{ project.marketplace|marketplace_label }}">{{ project.marketplace|flag }}</span>
       {{ project.primary_asin }}

@@ -1,0 +1,30 @@
+{% load rv %}
+{% comment %}Body of the asins tab. Swapped into #rv-tab-panel by HTMX.{% endcomment %}
+
+<form class="rv-toolbar" method="get" role="search"
+      hx-get="{% url 'projects:asins' project.project_id %}" hx-target="#rv-asin-results" hx-push-url="true"
+      hx-trigger="submit, input from:#rv-asin-search delay:350ms, change from:select">
+  <div class="rv-search">
+    <svg aria-hidden="true"><use href="#rv-i-search"></use></svg>
+    <input type="search" class="rv-input" id="rv-asin-search" name="q" value="{{ search }}"
+           placeholder="Search by ASIN, title or brand" aria-label="Search ASINs" autocomplete="off">
+  </div>
+  <div class="rv-toolbar__spacer"></div>
+  <select class="rv-select" name="status" aria-label="Filter by status" style="width:auto">
+    <option value="">All statuses</option>
+    <option value="active" {% if status == 'active' %}selected{% endif %}>Active</option>
+    <option value="paused" {% if status == 'paused' %}selected{% endif %}>Paused</option>
+  </select>
+  <select class="rv-select" name="sort" aria-label="Sort ASINs" style="width:auto">
+    <option value="-keywords" {% if sort == '-keywords' %}selected{% endif %}>Most keywords</option>
+    <option value="keywords" {% if sort == 'keywords' %}selected{% endif %}>Fewest keywords</option>
+    <option value="asin" {% if sort == 'asin' %}selected{% endif %}>ASIN A-Z</option>
+    <option value="title" {% if sort == 'title' %}selected{% endif %}>Title A-Z</option>
+  </select>
+  <input type="hidden" name="asin" value="{{ selected_asin }}">
+  <input type="hidden" name="size" value="{{ page_obj.size }}">
+</form>
+
+<div id="rv-asin-results">
+  {% include "projects/partials/asin_table.html" %}
+</div>

@@ -1,0 +1,416 @@
+/* Compact, premium density layer. Loaded after the base sheet and overrides its scale. */
+
+:root {
+  /* Tighter type and chrome so more data fits above the fold. */
+  --rv-sidebar-w: 208px;
+  --rv-sidebar-w-collapsed: 52px;
+  --rv-header-h: 48px;
+
+  --rv-row-h: 32px;
+  --rv-control-h: 30px;
+  --rv-control-h-sm: 26px;
+
+  /* A cooler, deeper surface ramp reads as more premium than flat white. */
+  --rv-bg: #f4f6f9;
+  --rv-surface: #ffffff;
+  --rv-surface-alt: #fafbfd;
+  --rv-surface-sunken: #eef1f6;
+  --rv-border: #e5e8ef;
+  --rv-border-strong: #d3d8e3;
+
+  --rv-text: #10131a;
+  --rv-text-muted: #5a6376;
+  --rv-text-subtle: #8790a1;
+
+  --rv-accent: #3348cf;
+  --rv-accent-hover: #2839ad;
+  --rv-accent-soft: #eef0fc;
+  --rv-accent-border: #c4cbf5;
+
+  --rv-radius: 5px;
+  --rv-radius-sm: 3px;
+  --rv-radius-lg: 8px;
+
+  --rv-shadow-sm: 0 1px 1px rgba(16, 24, 40, 0.04);
+  --rv-shadow: 0 1px 3px rgba(16, 24, 40, 0.08), 0 1px 2px rgba(16, 24, 40, 0.04);
+  --rv-shadow-lg: 0 16px 40px -8px rgba(16, 24, 40, 0.2), 0 4px 12px rgba(16, 24, 40, 0.08);
+}
+
+body {
+  font-size: 12.5px;
+  letter-spacing: -0.003em;
+}
+
+h1 { font-size: 17px; }
+h2 { font-size: 14px; }
+h3 { font-size: 13px; }
+
+/* ---------------------------------------------------------------- chrome */
+.rv-content { padding: 14px 16px; }
+.rv-header { padding: 0 16px; gap: 10px; }
+.rv-page-head { margin-bottom: 12px; gap: 12px; }
+.rv-toolbar { gap: 8px; margin-bottom: 10px; }
+
+.rv-sidebar__brand { padding: 0 12px; gap: 9px; }
+.rv-logo { width: 25px; height: 25px; font-size: 11.5px; border-radius: 6px; }
+.rv-brand-text strong { font-size: 12.5px; }
+.rv-brand-text span { font-size: 9.5px; }
+
+.rv-nav { padding: 8px 6px; }
+.rv-nav__label { font-size: 9.5px; padding: 8px 8px 4px; }
+.rv-nav__item { padding: 6px 8px; font-size: 12.5px; }
+.rv-nav__item svg { width: 16px; height: 16px; }
+
+/* -------------------------------------------------------------- controls */
+.rv-btn {
+  height: var(--rv-control-h);
+  padding: 0 11px;
+  font-size: 12.5px;
+  box-shadow: var(--rv-shadow-sm);
+}
+.rv-btn--ghost { box-shadow: none; }
+.rv-btn--sm { height: var(--rv-control-h-sm); padding: 0 8px; font-size: 11.5px; }
+.rv-btn--icon { width: var(--rv-control-h); }
+.rv-btn--icon.rv-btn--sm { width: var(--rv-control-h-sm); }
+.rv-btn svg { width: 14px; height: 14px; }
+
+.rv-input, .rv-select {
+  height: var(--rv-control-h);
+  font-size: 12.5px;
+  padding: 0 10px;
+}
+.rv-select { padding-right: 26px; background-size: 14px; }
+.rv-search .rv-input { padding-left: 29px; }
+.rv-search svg { width: 14px; height: 14px; left: 9px; }
+
+.rv-field { margin-bottom: 11px; }
+.rv-field__label { font-size: 11.5px; margin-bottom: 4px; }
+
+.rv-segment button, .rv-segment a { height: 28px; padding: 0 10px; font-size: 12px; }
+.rv-badge { font-size: 10.5px; padding: 1px 6px; }
+.rv-avatar { width: 25px; height: 25px; font-size: 10px; }
+
+/* ---------------------------------------------------------------- tables */
+.rv-table { font-size: 12.5px; }
+.rv-table th { padding: 7px 10px; font-size: 10.5px; letter-spacing: 0.02em; text-transform: uppercase; }
+.rv-table td { padding: 6px 10px; }
+.rv-thumb { width: 30px; height: 30px; }
+
+.rv-matrix th, .rv-matrix td { height: var(--rv-row-h); }
+.rv-matrix thead th { font-size: 10.5px; padding: 0 6px; }
+.rv-cell { line-height: var(--rv-row-h); font-size: 11.5px; }
+.rv-matrix__metric { line-height: var(--rv-row-h); font-size: 11.5px; padding: 0 9px; }
+.rv-matrix__date { width: 42px; min-width: 42px; }
+
+.rv-matrix .rv-sticky--check { width: 32px; min-width: 32px; }
+.rv-matrix .rv-sticky--keyword { left: 32px; width: 240px; min-width: 240px; max-width: 240px; }
+.rv-matrix .rv-sticky--m1 { left: 272px; width: 76px; min-width: 76px; }
+.rv-matrix .rv-sticky--m2 { left: 348px; width: 88px; min-width: 88px; }
+.rv-matrix .rv-sticky--m3 { left: 436px; width: 76px; min-width: 76px; }
+
+.rv-legend { padding: 8px 12px; font-size: 11.5px; gap: 14px; }
+.rv-legend__bar { width: 132px; height: 10px; }
+.rv-legend__swatch { width: 14px; height: 14px; }
+
+.rv-pagination { padding: 8px 12px; font-size: 11.5px; gap: 12px; }
+.rv-pagination__pages a, .rv-pagination__pages span { min-width: 25px; height: 25px; }
+.rv-pagination__size .rv-select { height: 25px; font-size: 11.5px; }
+
+/* ------------------------------------------------------------------ tabs */
+.rv-tabs { margin-bottom: 12px; }
+.rv-tab { padding: 7px 11px; font-size: 12.5px; }
+.rv-tab__count { font-size: 10.5px; padding: 0 6px; }
+.rv-subtabs { gap: 5px; margin-bottom: 11px; }
+.rv-subtab { padding: 5px 10px; font-size: 12px; }
+
+/* ------------------------------------------------------------ KPI + cards */
+.rv-kpis { gap: 10px; margin-bottom: 12px; }
+.rv-kpi { padding: 11px 13px; min-height: 116px; gap: 6px; }
+.rv-kpi__label { font-size: 11.5px; }
+.rv-kpi__value { font-size: 21px; }
+.rv-kpi__chart, .rv-kpi__chart svg, .rv-kpi__axis, .rv-dist { min-height: 56px; height: 56px; }
+.rv-dist__chart { height: 62px; }
+.rv-dist__legend { font-size: 10.5px; }
+
+.rv-card__header { padding: 10px 13px; }
+.rv-card__body { padding: 13px; }
+
+.rv-grid { gap: 11px; grid-template-columns: repeat(auto-fill, minmax(206px, 1fr)); }
+.rv-project-card__media { height: 124px; }
+.rv-project-card__body { padding: 10px 11px 11px; gap: 5px; }
+.rv-project-card__title { font-size: 12.5px; min-height: 2.6em; }
+.rv-project-card__asin, .rv-project-card__stats { font-size: 11.5px; }
+
+.rv-counters { gap: 14px; }
+.rv-counter { font-size: 12px; }
+
+/* Cards lift slightly on hover, which reads as premium without being flashy. */
+.rv-project-card { box-shadow: var(--rv-shadow-sm); }
+.rv-project-card:hover { box-shadow: var(--rv-shadow); transform: translateY(-1px); }
+
+.rv-empty { padding: 40px 20px; gap: 7px; }
+.rv-empty__icon { width: 38px; height: 38px; }
+
+@media (min-width: 1600px) {
+  .rv-grid { grid-template-columns: repeat(auto-fill, minmax(218px, 1fr)); }
+}
+
+@media (max-width: 640px) {
+  .rv-content { padding: 10px; }
+  .rv-matrix .rv-sticky--keyword { width: 164px; min-width: 164px; max-width: 164px; }
+}
+
+/* ------------------------------------------------------------ quick view */
+.rv-modal--wide { max-width: 680px; }
+
+.rv-qv { display: grid; grid-template-columns: 140px 1fr; gap: 16px; align-items: start; }
+.rv-qv__media {
+  height: 140px;
+  border: 1px solid var(--rv-border);
+  border-radius: var(--rv-radius);
+  background: var(--rv-surface-alt);
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+}
+.rv-qv__media img { max-width: 88%; max-height: 88%; object-fit: contain; }
+.rv-qv__stats { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+
+.rv-stat {
+  border: 1px solid var(--rv-border);
+  border-radius: var(--rv-radius);
+  padding: 9px 11px;
+  background: var(--rv-surface-alt);
+}
+.rv-stat__label {
+  display: block;
+  font-size: 10.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--rv-text-subtle);
+  font-weight: 600;
+}
+.rv-stat__value { font-size: 19px; font-weight: 650; letter-spacing: -0.02em; }
+
+@media (max-width: 560px) {
+  .rv-qv { grid-template-columns: 1fr; }
+  .rv-qv__media { height: 120px; }
+}
+
+/* Image fallback: the icon sits underneath, a broken image removes itself. */
+.rv-project-card__media { position: relative; }
+.rv-media-fallback {
+  position: absolute;
+  color: var(--rv-border-strong);
+  pointer-events: none;
+}
+.rv-project-card__media img {
+  position: relative;
+  z-index: 1;
+  background: var(--rv-surface-alt);
+}
+.rv-thumb-wrap { position: relative; display: grid; place-items: center; }
+.rv-thumb-wrap .rv-media-fallback { width: 15px; height: 15px; }
+
+.rv-qv__media { position: relative; }
+.rv-qv__media img { position: relative; z-index: 1; }
+
+/* ------------------------------------------------------------------ icons */
+/* Icons were sized down with the type scale and became hard to read; these
+   restore a legible 16-18px target while the surrounding chrome stays compact. */
+.rv-btn svg { width: 16px; height: 16px; }
+.rv-btn--sm svg { width: 15px; height: 15px; }
+.rv-btn--icon svg { width: 17px; height: 17px; }
+.rv-btn--icon.rv-btn--sm svg { width: 16px; height: 16px; }
+
+.rv-nav__item svg { width: 18px; height: 18px; }
+.rv-search svg { width: 15px; height: 15px; left: 10px; }
+.rv-search .rv-input { padding-left: 32px; }
+
+.rv-dropdown__item svg { width: 16px; height: 16px; flex-shrink: 0; }
+.rv-kpi__label svg { width: 14px; height: 14px; }
+.rv-tab svg, .rv-subtab svg { width: 16px; height: 16px; }
+.rv-empty__icon { width: 44px; height: 44px; }
+.rv-empty__icon svg { width: 22px; height: 22px; }
+.rv-media-fallback { width: 38px; height: 38px; }
+.rv-thumb-wrap .rv-media-fallback { width: 16px; height: 16px; }
+
+/* Overflow menus were a 15px dot column; widen the hit area for pointer and touch. */
+.rv-project-card__menu .rv-btn--icon { width: 28px; height: 28px; }
+.rv-project-card__menu .rv-btn--icon svg { width: 16px; height: 16px; }
+.rv-matrix__keyword .rv-btn--icon { width: 24px; height: 24px; }
+.rv-matrix__keyword .rv-btn--icon svg { width: 15px; height: 15px; }
+
+/* The sidebar logo and marketplace chip carry the brand; keep them readable. */
+.rv-logo { width: 28px; height: 28px; font-size: 12.5px; }
+.rv-flag { min-width: 26px; height: 18px; font-size: 10.5px; }
+.rv-flag--lg { min-width: 32px; height: 22px; font-size: 12px; }
+.rv-avatar { width: 28px; height: 28px; font-size: 11px; }
+
+@media (pointer: coarse) {
+  /* Touch targets need more room than a mouse does. */
+  .rv-btn--icon { width: 36px; height: 36px; }
+  .rv-btn--icon svg { width: 19px; height: 19px; }
+  .rv-check { width: 17px; height: 17px; }
+}
+
+/* --------------------------------------------------------------- skeletons */
+.rv-skeleton {
+  background: linear-gradient(90deg, #e9edf3 25%, #f4f6fa 50%, #e9edf3 75%);
+  background-size: 200% 100%;
+  animation: rv-shimmer 1.25s ease-in-out infinite;
+  border-radius: var(--rv-radius-sm);
+}
+.rv-skeleton--text { height: 11px; width: 100%; }
+.rv-skeleton--cell { height: 20px; flex-shrink: 0; }
+.rv-skeleton--control { height: var(--rv-control-h); border-radius: var(--rv-radius); }
+.rv-skeleton--media { height: 124px; border-radius: 0; }
+.rv-skeleton--kpi { height: 116px; border-radius: var(--rv-radius-lg); }
+
+.rv-skeleton-card {
+  border: 1px solid var(--rv-border);
+  border-radius: var(--rv-radius-lg);
+  overflow: hidden;
+  background: var(--rv-surface);
+}
+.rv-skeleton-card__body { padding: 10px 11px 13px; display: grid; gap: 7px; }
+
+.rv-skeleton-table { padding: 4px 0; }
+.rv-skeleton-table__head,
+.rv-skeleton-table__row {
+  display: grid;
+  grid-template-columns: 2.4fr repeat(4, 1fr);
+  gap: 14px;
+  padding: 9px 12px;
+  align-items: center;
+}
+.rv-skeleton-table__head { border-bottom: 1px solid var(--rv-border); }
+.rv-skeleton-table__row + .rv-skeleton-table__row { border-top: 1px solid var(--rv-border); }
+
+.rv-skeleton-matrix { padding: 6px 0; overflow: hidden; }
+.rv-skeleton-matrix__row {
+  display: flex;
+  gap: 8px;
+  padding: 6px 12px;
+  align-items: center;
+}
+.rv-skeleton-matrix__row + .rv-skeleton-matrix__row { border-top: 1px solid var(--rv-border); }
+
+.rv-skeleton-panel__toolbar {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+}
+
+/* A settling swap should not flash; fade freshly swapped content in. */
+.rv-swapping { opacity: 0.45; transition: opacity 0.1s ease; }
+@media (prefers-reduced-motion: no-preference) {
+  .rv-swapped-in { animation: rv-fade-in 0.18s ease; }
+}
+@keyframes rv-fade-in { from { opacity: 0; } to { opacity: 1; } }
+
+/* The project name is derived from a long Amazon title, so let it wrap in full. */
+.rv-project-title {
+  line-height: 1.28;
+  max-width: min(58ch, 52vw);
+  overflow-wrap: anywhere;
+}
+.rv-breadcrumb .rv-truncate { max-width: 320px; }
+
+/* --------------------------------------------------------------- tooltips */
+.rv-tooltip {
+  position: fixed;
+  z-index: 95;
+  min-width: 90px;
+  max-width: 240px;
+  padding: 7px 9px;
+  border-radius: var(--rv-radius);
+  background: #10131a;
+  color: #f2f4f8;
+  font-size: 11.5px;
+  line-height: 1.45;
+  box-shadow: var(--rv-shadow-lg);
+  pointer-events: none;
+  opacity: 0;
+  transform: translateY(3px);
+  transition: opacity 0.1s ease, transform 0.1s ease;
+}
+.rv-tooltip.is-visible { opacity: 1; transform: none; }
+.rv-tooltip__date {
+  display: block;
+  font-weight: 600;
+  color: #fff;
+  margin-bottom: 3px;
+  white-space: nowrap;
+}
+.rv-tooltip__value { display: block; color: #c9cfdb; white-space: nowrap; }
+.rv-tooltip__row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #c9cfdb;
+  white-space: nowrap;
+}
+.rv-tooltip__row i { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+.rv-tooltip__row b { margin-left: auto; color: #fff; font-variant-numeric: tabular-nums; }
+
+/* Sparkline hover affordances. */
+.rv-kpi__chart { cursor: crosshair; }
+.rv-spark__marker { fill: var(--rv-accent); stroke: #fff; stroke-width: 1.5; opacity: 0; }
+.rv-spark__marker.is-visible { opacity: 1; }
+.rv-spark__rule { stroke: var(--rv-border-strong); stroke-width: 1; stroke-dasharray: 2 2; opacity: 0; }
+.rv-spark__rule.is-visible { opacity: 1; }
+
+.rv-dist__col { cursor: pointer; transition: opacity 0.1s ease; }
+.rv-dist__chart:hover .rv-dist__col { opacity: 0.55; }
+.rv-dist__chart:hover .rv-dist__col:hover { opacity: 1; }
+
+/* Matrix cells lift on hover so the cell being read stands out.
+   Never set position on a hovered cell: it would cancel position:sticky. */
+.rv-cell { transition: box-shadow 0.1s ease; }
+.rv-cell:hover { box-shadow: inset 0 0 0 2px var(--rv-accent); cursor: default; }
+
+/* Frozen columns must stay opaque, or scrolled cells show through them. */
+.rv-matrix .rv-sticky { background: var(--rv-surface); }
+.rv-matrix thead .rv-sticky { background: var(--rv-surface-alt); }
+.rv-matrix tbody tr:hover .rv-sticky { background: #f2f5fb; }
+.rv-matrix tbody tr:hover td:not(.rv-sticky) .rv-cell--unranked { background: #f7f9fc; }
+
+/* ------------------------------------------------------------------ roles */
+.rv-role-grid {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+}
+.rv-role__badge {
+  width: 32px; height: 32px;
+  border-radius: var(--rv-radius);
+  display: grid; place-items: center;
+  background: var(--rv-surface-sunken);
+  color: var(--rv-text-muted);
+  flex-shrink: 0;
+}
+.rv-role__badge svg { width: 17px; height: 17px; }
+.rv-role__badge--super_admin { background: var(--rv-accent-soft); color: var(--rv-accent); }
+.rv-role__badge--admin { background: var(--rv-warning-soft); color: var(--rv-warning); }
+.rv-role__badge--user { background: var(--rv-success-soft); color: var(--rv-success); }
+
+.rv-role__caps { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.rv-role__caps li {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12.5px;
+  color: var(--rv-text);
+}
+.rv-role__caps svg { width: 14px; height: 14px; color: var(--rv-success); flex-shrink: 0; }
+
+code {
+  font-family: var(--rv-mono);
+  font-size: 11.5px;
+  background: var(--rv-surface-sunken);
+  padding: 1px 5px;
+  border-radius: var(--rv-radius-sm);
+}

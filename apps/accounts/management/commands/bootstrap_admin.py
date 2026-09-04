@@ -10,6 +10,7 @@ from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
 
 from apps.accounts.models import Role, User
+from apps.common.secrets import resolve
 from apps.audit.models import AuditAction
 from apps.audit.services import record
 
@@ -43,12 +44,18 @@ class Command(BaseCommand):
 
         email = os.environ["APP_ADMIN_EMAIL"].strip().lower()
         username = os.environ["APP_ADMIN_USERNAME"].strip()
-        password = os.environ["APP_ADMIN_PASSWORD"]
+        password = resolve(os.environ["APP_ADMIN_PASSWORD"])
 
         if len(password) < 10:
             raise CommandError("APP_ADMIN_PASSWORD must be at least 10 characters long.")
 
         user = User.objects.filter(email__iexact=email).first()
+        if user is None:
+            # The configured email may have changed; adopt the account holding the
+            # bootstrap username rather than failing on a unique-constraint clash.
+            user = User.objects.filter(username__iexact=username).first()
+            adopted = user is not None
+
         if user is None:
             try:
                 user = User.objects.create_user(
@@ -61,6 +68,9 @@ class Command(BaseCommand):
             return
 
         changes: list[str] = []
+        if locals().get("adopted") and user.email.lower() != email:
+            user.email = email
+            changes.append("email")
         if user.role != Role.SUPER_ADMIN:
             user.role = Role.SUPER_ADMIN
             changes.append("role")

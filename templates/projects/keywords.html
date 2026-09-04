@@ -10,58 +10,7 @@
 {% block content %}
 {% include "projects/partials/project_header.html" %}
 
-<div class="rv-toolbar">
-  {% include "projects/partials/asin_selector.html" %}
-  {% if summary %}
-    <div class="rv-counters" style="margin-left:8px">
-      <span class="rv-counter"><strong>{{ summary.keywords|intcomma }}</strong> <span>Keywords</span></span>
-      <span class="rv-counter"><strong>{{ summary.tracked|intcomma }}</strong> <span>Tracked</span></span>
-      <span class="rv-counter"><strong>{{ summary.sales|intcomma }}</strong> <span>KW Sales</span></span>
-      <span class="rv-counter"><strong>{{ summary.avg_conversion }}%</strong> <span>Avg conv.</span></span>
-    </div>
-  {% endif %}
-  <div class="rv-toolbar__spacer"></div>
-  <a class="rv-btn rv-btn--primary" href="{% url 'projects:ranks' project.project_id %}?asin={{ selected_asin }}">
-    <svg aria-hidden="true"><use href="#rv-i-chart"></use></svg> Open rank matrix
-  </a>
+<div id="rv-tab-panel">
+  {% include "projects/partials/tab_keywords.html" %}
 </div>
-
-{% if not selected_asin %}
-  <div class="rv-table-wrap">
-    <div class="rv-empty">
-      <div class="rv-empty__icon"><svg aria-hidden="true" width="22" height="22"><use href="#rv-i-box"></use></svg></div>
-      <h3>No ASIN selected</h3>
-      <p>This project has no ASINs yet, so there are no keywords to display.</p>
-    </div>
-  </div>
-{% else %}
-  <form class="rv-toolbar" method="get" role="search"
-        hx-get="{% url 'projects:keywords' project.project_id %}" hx-target="#rv-keyword-results" hx-push-url="true"
-        hx-trigger="submit, input from:#rv-keyword-search delay:350ms, change from:select">
-    <div class="rv-search">
-      <svg aria-hidden="true"><use href="#rv-i-search"></use></svg>
-      <input type="search" class="rv-input" id="rv-keyword-search" name="kq" value="{{ search }}"
-             placeholder="Search keywords" aria-label="Search keywords" autocomplete="off">
-    </div>
-    <div class="rv-toolbar__spacer"></div>
-    <select class="rv-select" name="tracked" aria-label="Tracking status" style="width:auto">
-      <option value="">All keywords</option>
-      <option value="tracked" {% if request.GET.tracked == 'tracked' %}selected{% endif %}>Tracked only</option>
-      <option value="untracked" {% if request.GET.tracked == 'untracked' %}selected{% endif %}>Untracked only</option>
-    </select>
-    <select class="rv-select" name="sort" aria-label="Sort keywords" style="width:auto">
-      <option value="-sales" {% if sort == '-sales' %}selected{% endif %}>KW Sales high-low</option>
-      <option value="-volume" {% if sort == '-volume' %}selected{% endif %}>Search volume high-low</option>
-      <option value="rank" {% if sort == 'rank' %}selected{% endif %}>Best rank first</option>
-      <option value="-conversion" {% if sort == '-conversion' %}selected{% endif %}>Conversion high-low</option>
-      <option value="keyword" {% if sort == 'keyword' %}selected{% endif %}>Keyword A-Z</option>
-    </select>
-    <input type="hidden" name="asin" value="{{ selected_asin }}">
-    <input type="hidden" name="size" value="{{ page_obj.size }}">
-  </form>
-
-  <div id="rv-keyword-results">
-    {% include "projects/partials/keyword_table.html" %}
-  </div>
-{% endif %}
 {% endblock %}

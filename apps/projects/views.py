@@ -3,6 +3,7 @@ Views stay thin; querying lives in repositories and selectors."""
 
 from __future__ import annotations
 
+from datetime import timedelta
 from typing import Any
 
 from django.contrib import messages
@@ -31,11 +32,38 @@ from apps.projects import repositories as repo
 from apps.projects import services
 from apps.projects.forms import ProjectForm
 from apps.projects.selectors import require_project, usage_counters
+from apps.rankings import repositories as rank_repo
 from apps.rankings import selectors as matrix
+
+TAB_PANEL_TARGET = "rv-tab-panel"
 
 PROJECT_FILTER_KEYS = ("q", "marketplace", "status", "min_asins", "min_keywords")
 KEYWORD_FILTER_KEYS = ("kq", "tracked", "rank_min", "rank_max", "sales_min", "conv_min")
 VIEW_MODES = {"grid", "list"}
+
+
+def _clamped_window(request: HttpRequest, project_id, asin: str):
+    """Resolve the date window, then pull it back to the newest observed date.
+    Without this the right-most matrix columns render empty after a sync gap."""
+    window = resolve_window(request)
+    if not asin:
+        return window
+    _, newest = rank_repo.available_range(project_id=project_id, asin=asin)
+    if newest and newest < window.end:
+        span = (window.end - window.start).days
+        window.end = newest
+        window.start = newest - timedelta(days=span)
+    return window
+
+
+def _tab_render(request: HttpRequest, context: dict, tab: str, inner: str) -> HttpResponse:
+    """Pick the narrowest template the request needs: page, tab panel or inner list."""
+    panel = f"projects/partials/tab_{tab}.html"
+    if not request.htmx:
+        return render(request, f"projects/{tab}.html", context)
+    if request.headers.get("HX-Target") == TAB_PANEL_TARGET:
+        return render(request, "projects/partials/tab_panel.html", {**context, "panel_template": panel})
+    return render(request, inner, context)
 
 
 def _error_page(request: HttpRequest, message: str, status: int = 503) -> HttpResponse:
@@ -177,6 +205,39 @@ def project_detail(request: HttpRequest, project_id: int) -> HttpResponse:
 
 
 @login_required
+def project_quickview(request: HttpRequest, project_id: int) -> HttpResponse:
+    """Card click target: a modal summary that keeps the user on the project grid."""
+    project = require_project(project_id)
+    repo.touch_last_opened(project_id)
+    try:
+        top_asins = asin_repo.selector_options(project_id, limit=12)
+        window = _clamped_window(
+            request, project_id, top_asins[0]["asin"] if top_asins else ""
+        )
+        overview = (
+            analytics.build_overview(
+                project_id=project_id, asin=top_asins[0]["asin"], window=window
+            )
+            if top_asins
+            else None
+        )
+    except SourceUnavailable as exc:
+        return _error_page(request, str(exc))
+
+    return render(
+        request,
+        "projects/partials/project_quickview.html",
+        {
+            "project": project,
+            "market": marketplace(project.get("marketplace")),
+            "top_asins": top_asins,
+            "overview": overview,
+            "active_nav": "projects",
+        },
+    )
+
+
+@login_required
 def project_asins(request: HttpRequest, project_id: int) -> HttpResponse:
     context = _project_context(request, project_id, "asins")
     page_req = parse_page_request(request)
@@ -204,8 +265,7 @@ def project_asins(request: HttpRequest, project_id: int) -> HttpResponse:
             "status": qp.get_str(request, "status"),
         }
     )
-    template = "projects/partials/asin_table.html" if request.htmx else "projects/asins.html"
-    return render(request, template, context)
+    return _tab_render(request, context, "asins", "projects/partials/asin_table.html")
 
 
 def _keyword_page(request: HttpRequest, project_id: int, asin: str):
@@ -234,7 +294,7 @@ def project_keywords(request: HttpRequest, project_id: int) -> HttpResponse:
     asin = context["selected_asin"]
     if not asin:
         context.update({"page_obj": None, "keywords": [], "sort": keyword_repo.DEFAULT_SORT})
-        return render(request, "projects/keywords.html", context)
+        return _tab_render(request, context, "keywords", "projects/partials/keyword_table.html")
 
     try:
         page_obj, rows, sort = _keyword_page(request, project_id, asin)
@@ -252,15 +312,14 @@ def project_keywords(request: HttpRequest, project_id: int) -> HttpResponse:
             "has_filters": qp.has_active_filters(request, KEYWORD_FILTER_KEYS),
         }
     )
-    template = "projects/partials/keyword_table.html" if request.htmx else "projects/keywords.html"
-    return render(request, template, context)
+    return _tab_render(request, context, "keywords", "projects/partials/keyword_table.html")
 
 
 @login_required
 def project_ranks(request: HttpRequest, project_id: int) -> HttpResponse:
     context = _project_context(request, project_id, "ranks")
     asin = context["selected_asin"]
-    window = resolve_window(request)
+    window = _clamped_window(request, project_id, asin)
 
     context.update(
         {
@@ -276,7 +335,7 @@ def project_ranks(request: HttpRequest, project_id: int) -> HttpResponse:
 
     if not asin:
         context.update({"page_obj": None, "columns": [], "rows": [], "overview": None})
-        return render(request, "projects/ranks.html", context)
+        return _tab_render(request, context, "ranks", "projects/partials/rank_matrix.html")
 
     try:
         page_obj, keywords, sort = _keyword_page(request, project_id, asin)
@@ -290,15 +349,14 @@ def project_ranks(request: HttpRequest, project_id: int) -> HttpResponse:
     context.update(
         {"page_obj": page_obj, "columns": columns, "rows": rows, "overview": overview, "sort": sort}
     )
-    template = "projects/partials/rank_matrix.html" if request.htmx else "projects/ranks.html"
-    return render(request, template, context)
+    return _tab_render(request, context, "ranks", "projects/partials/rank_matrix.html")
 
 
 @login_required
 def project_trends(request: HttpRequest, project_id: int) -> HttpResponse:
     context = _project_context(request, project_id, "trends")
     asin = context["selected_asin"]
-    window = resolve_window(request)
+    window = _clamped_window(request, project_id, asin)
     context.update(
         {
             "window": window,
@@ -310,7 +368,7 @@ def project_trends(request: HttpRequest, project_id: int) -> HttpResponse:
 
     if not asin:
         context.update({"overview": None, "metrics": []})
-        return render(request, "projects/trends.html", context)
+        return _tab_render(request, context, "trends", "projects/partials/trend_panels.html")
 
     try:
         overview = analytics.build_overview(project_id=project_id, asin=asin, window=window)
@@ -353,8 +411,7 @@ def project_trends(request: HttpRequest, project_id: int) -> HttpResponse:
         },
     ]
     context.update({"overview": overview, "metrics": metrics})
-    template = "projects/partials/trend_panels.html" if request.htmx else "projects/trends.html"
-    return render(request, template, context)
+    return _tab_render(request, context, "trends", "projects/partials/trend_panels.html")
 
 
 @login_required
@@ -365,9 +422,7 @@ def keyword_detail(request: HttpRequest, project_id: int, keyword: str) -> HttpR
     if not asin:
         raise Http404("No ASIN selected.")
 
-    from apps.rankings import repositories as rank_repo
-
-    window = resolve_window(request)
+    window = _clamped_window(request, project_id, asin)
     try:
         history = rank_repo.keyword_history(
             project_id=project_id, asin=asin, keyword_lower=keyword.lower(), window=window

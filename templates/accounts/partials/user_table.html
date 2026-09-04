@@ -14,6 +14,7 @@
           <tr>
             <th scope="col">User</th>
             <th scope="col">Role</th>
+            <th scope="col">Department</th>
             <th scope="col">Status</th>
             <th scope="col">Last login</th>
             <th scope="col">Joined</th>
@@ -36,6 +37,14 @@
               <span class="rv-badge {% if row.is_super_admin %}rv-badge--accent{% elif row.is_admin %}rv-badge--warning{% endif %}">
                 {{ row.get_role_display }}
               </span>
+            </td>
+            <td>
+              {% if row.department %}
+                <span class="rv-badge rv-badge--accent">{{ row.department.code }}</span>
+                <div style="font-size:11px;color:var(--rv-text-subtle)">{{ row.job_title|default:row.department.name }}</div>
+              {% else %}
+                <span style="color:var(--rv-text-subtle)">-</span>
+              {% endif %}
             </td>
             <td>
               <span class="rv-badge {% if row.is_active %}rv-badge--success{% else %}rv-badge--danger{% endif %}">

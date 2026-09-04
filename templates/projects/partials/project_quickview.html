@@ -1,0 +1,98 @@
+{% load rv humanize %}
+{% comment %}Project quick view. Opens as a modal from a card so the grid is never lost.{% endcomment %}
+<div class="rv-modal-backdrop">
+  <div class="rv-modal rv-modal--wide" role="dialog" aria-modal="true" aria-labelledby="rv-qv-title">
+    <div class="rv-modal__header">
+      <div style="display:flex;align-items:center;gap:10px;min-width:0">
+        <span class="rv-flag rv-flag--lg" title="{{ market.label }}">{{ market.code }}</span>
+        <div style="min-width:0">
+          <h2 id="rv-qv-title" class="rv-project-title" title="{{ project.full_title|default:project.name }}">{{ project.name }}</h2>
+          <div style="font-size:11.5px;color:var(--rv-text-subtle)">
+            Project {{ project.project_id }} &middot; <span class="rv-mono">{{ project.primary_asin }}</span>
+            {% if project.brand %} &middot; {{ project.brand }}{% endif %}
+          </div>
+        </div>
+      </div>
+      <button type="button" class="rv-btn rv-btn--ghost rv-btn--icon rv-btn--sm" data-rv-close-modal
+              aria-label="Close">&times;</button>
+    </div>
+
+    <div class="rv-modal__body">
+      <div class="rv-qv">
+        <div class="rv-qv__media">
+          <svg class="rv-media-fallback" aria-hidden="true" width="34" height="34">
+            <use href="#rv-i-box"></use>
+          </svg>
+          {% if project.image_url %}
+            <img src="{{ project.image_url }}" alt="" loading="lazy" decoding="async"
+                 onerror="this.remove()">
+          {% endif %}
+        </div>
+
+        <div class="rv-qv__stats">
+          <div class="rv-stat">
+            <span class="rv-stat__label">ASINs</span>
+            <strong class="rv-stat__value">{{ project.asin_count|intcomma }}</strong>
+          </div>
+          <div class="rv-stat">
+            <span class="rv-stat__label">Keywords</span>
+            <strong class="rv-stat__value">{{ project.keyword_count|intcomma }}</strong>
+          </div>
+          <div class="rv-stat">
+            <span class="rv-stat__label">Visibility</span>
+            <strong class="rv-stat__value">
+              {% if overview.has_data %}{{ overview.visibility.value|floatformat:0 }}%{% else %}-{% endif %}
+            </strong>
+          </div>
+          <div class="rv-stat">
+            <span class="rv-stat__label">Avg position</span>
+            <strong class="rv-stat__value">
+              {% if overview.average_position.value %}{{ overview.average_position.value|floatformat:1 }}{% else %}-{% endif %}
+            </strong>
+          </div>
+        </div>
+      </div>
+
+      {% if top_asins %}
+        <h3 style="margin:16px 0 8px">Tracked ASINs</h3>
+        <div class="rv-scroll" style="max-height:210px;overflow-y:auto;border:1px solid var(--rv-border);border-radius:var(--rv-radius)">
+          <table class="rv-table">
+            <thead>
+              <tr>
+                <th scope="col">ASIN</th>
+                <th scope="col">Product</th>
+                <th scope="col" class="rv-num">Keywords</th>
+                <th scope="col"><span class="rv-visually-hidden">Open</span></th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for row in top_asins %}
+              <tr>
+                <td class="rv-mono">{{ row.asin }}{% if row.is_primary %} <span class="rv-badge rv-badge--accent">Primary</span>{% endif %}</td>
+                <td><span class="rv-truncate" style="max-width:280px;display:block">{{ row.title|default:"-" }}</span></td>
+                <td class="rv-num">{{ row.tracked_keyword_count|intcomma }}</td>
+                <td style="text-align:right;white-space:nowrap">
+                  <a class="rv-btn rv-btn--sm" href="{% url 'projects:ranks' project.project_id %}?asin={{ row.asin }}">Ranks</a>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% endif %}
+    </div>
+
+    <div class="rv-modal__footer" style="justify-content:space-between">
+      <a class="rv-btn rv-btn--ghost" href="{% url 'projects:edit' project.project_id %}">
+        <svg aria-hidden="true"><use href="#rv-i-edit"></use></svg> Edit Project
+      </a>
+      <div style="display:flex;gap:8px">
+        <a class="rv-btn" href="{% url 'projects:asins' project.project_id %}">ASINs</a>
+        <a class="rv-btn" href="{% url 'projects:keywords' project.project_id %}">Keywords</a>
+        <a class="rv-btn rv-btn--primary" href="{% url 'projects:ranks' project.project_id %}">
+          <svg aria-hidden="true"><use href="#rv-i-chart"></use></svg> Open Ranks
+        </a>
+      </div>
+    </div>
+  </div>
+</div>

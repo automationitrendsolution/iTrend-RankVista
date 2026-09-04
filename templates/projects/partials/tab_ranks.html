@@ -1,0 +1,73 @@
+{% load rv %}
+{% comment %}Body of the ranks tab. Swapped into #rv-tab-panel by HTMX.{% endcomment %}
+
+<div class="rv-subtabs">
+  <a class="rv-subtab is-active" href="{% qs %}">Ranks Matrix</a>
+  <a class="rv-subtab" href="{% url 'projects:keywords' project.project_id %}?asin={{ selected_asin }}">Ranks by Keyword</a>
+  <a class="rv-subtab" href="{% url 'projects:asins' project.project_id %}?asin={{ selected_asin }}">Ranks by ASIN</a>
+  <a class="rv-subtab" href="{% url 'projects:trends' project.project_id %}?asin={{ selected_asin }}">Trends</a>
+</div>
+
+<div class="rv-toolbar">
+  {% include "projects/partials/asin_selector.html" %}
+
+  <div class="rv-toolbar__spacer"></div>
+
+  {% include "projects/partials/date_controls.html" %}
+</div>
+
+{% if not selected_asin %}
+  <div class="rv-table-wrap">
+    <div class="rv-empty">
+      <div class="rv-empty__icon"><svg aria-hidden="true" width="22" height="22"><use href="#rv-i-box"></use></svg></div>
+      <h3>No ASIN to report on</h3>
+      <p>Add an ASIN to this project to start collecting keyword rank history.</p>
+      <a class="rv-btn rv-btn--primary" href="{% url 'projects:edit' project.project_id %}">Edit project</a>
+    </div>
+  </div>
+{% else %}
+  {% include "projects/partials/rank_overview.html" %}
+
+  <form class="rv-toolbar" method="get" role="search"
+        hx-get="{% url 'projects:ranks' project.project_id %}" hx-target="#rv-rank-results" hx-push-url="true"
+        hx-trigger="submit, input from:#rv-rank-search delay:350ms, change from:select, change from:input[type=number]">
+    <div class="rv-search">
+      <svg aria-hidden="true"><use href="#rv-i-search"></use></svg>
+      <input type="search" class="rv-input" id="rv-rank-search" name="kq" value="{{ search }}"
+             placeholder="Search keywords" aria-label="Search keywords" autocomplete="off">
+    </div>
+
+    <select class="rv-select" name="tracked" aria-label="Tracking status" style="width:auto">
+      <option value="">All keywords</option>
+      <option value="tracked" {% if request.GET.tracked == 'tracked' %}selected{% endif %}>Tracked only</option>
+      <option value="untracked" {% if request.GET.tracked == 'untracked' %}selected{% endif %}>Untracked only</option>
+    </select>
+
+    <input type="number" class="rv-input" name="rank_min" min="1" max="306" style="width:96px"
+           value="{{ request.GET.rank_min }}" placeholder="Rank min" aria-label="Minimum rank">
+    <input type="number" class="rv-input" name="rank_max" min="1" max="306" style="width:96px"
+           value="{{ request.GET.rank_max }}" placeholder="Rank max" aria-label="Maximum rank">
+
+    <select class="rv-select" name="sort" aria-label="Sort keywords" style="width:auto">
+      <option value="-sales" {% if sort == '-sales' %}selected{% endif %}>KW Sales high-low</option>
+      <option value="sales" {% if sort == 'sales' %}selected{% endif %}>KW Sales low-high</option>
+      <option value="rank" {% if sort == 'rank' %}selected{% endif %}>Best rank first</option>
+      <option value="-conversion" {% if sort == '-conversion' %}selected{% endif %}>Conversion high-low</option>
+      <option value="keyword" {% if sort == 'keyword' %}selected{% endif %}>Keyword A-Z</option>
+    </select>
+
+    {% if has_filters %}
+      <a class="rv-btn rv-btn--ghost rv-btn--sm"
+         href="{% url 'projects:ranks' project.project_id %}?asin={{ selected_asin }}">Clear filters</a>
+    {% endif %}
+
+    <input type="hidden" name="asin" value="{{ selected_asin }}">
+    <input type="hidden" name="range" value="{{ window.preset }}">
+    <input type="hidden" name="interval" value="{{ window.interval }}">
+    <input type="hidden" name="size" value="{{ page_obj.size }}">
+  </form>
+
+  <div id="rv-rank-results">
+    {% include "projects/partials/rank_matrix.html" %}
+  </div>
+{% endif %}

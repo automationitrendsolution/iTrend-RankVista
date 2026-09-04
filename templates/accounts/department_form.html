@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+{% load humanize %}
+
+{% block title %}{% if mode == 'edit' %}Edit department{% else %}Create department{% endif %} - {{ BRAND.NAME }}{% endblock %}
+
+{% block header %}
+<nav class="rv-breadcrumb" aria-label="Breadcrumb"><a href="{% url 'useradmin:department_list' %}">Departments</a><span aria-hidden="true">/</span><span>{% if mode == 'edit' %}{{ department.name }}{% else %}New department{% endif %}</span></nav>
+{% endblock %}
+
+{% block content %}
+<div class="rv-page-head">
+  <div style="display:flex;align-items:center;gap:10px">
+    <a class="rv-btn rv-btn--ghost rv-btn--icon" href="{% url 'useradmin:department_list' %}" aria-label="Back to departments">
+      <svg aria-hidden="true"><use href="#rv-i-back"></use></svg>
+    </a>
+    <h1>{% if mode == 'edit' %}Edit department{% else %}Create department{% endif %}</h1>
+  </div>
+</div>
+
+<div style="display:grid;gap:14px;grid-template-columns:minmax(0,1fr);max-width:1000px">
+  <div class="rv-card" style="max-width:560px">
+    <form method="post" novalidate data-rv-loading>
+      {% csrf_token %}
+      <div class="rv-card__body">
+        {% if form.non_field_errors %}
+          <div class="rv-auth__alert" role="alert">
+            <svg aria-hidden="true"><use href="#rv-i-alert"></use></svg>
+            <div>{{ form.non_field_errors.0 }}</div>
+          </div>
+        {% endif %}
+
+        {% for field in form %}
+          <div class="rv-field">
+            {% if field.name == 'is_active' %}
+              <label class="rv-auth__remember" style="font-size:13px">{{ field }} Department is active</label>
+            {% else %}
+              <label class="rv-field__label" for="{{ field.id_for_label }}">
+                {{ field.label }}{% if field.field.required %} <span style="color:var(--rv-danger)">*</span>{% endif %}
+              </label>
+              {{ field }}
+            {% endif %}
+            {% if field.errors %}<div class="rv-field__error">{{ field.errors.0 }}</div>{% endif %}
+            {% if field.name == 'code' %}
+              <div class="rv-field__hint">A short uppercase identifier, e.g. SEO or PPC. Letters and digits only.</div>
+            {% endif %}
+          </div>
+        {% endfor %}
+      </div>
+
+      <div class="rv-modal__footer" style="border-radius:0 0 var(--rv-radius-lg) var(--rv-radius-lg)">
+        <a class="rv-btn" href="{% url 'useradmin:department_list' %}">Cancel</a>
+        <button type="submit" class="rv-btn rv-btn--primary">
+          {% if mode == 'edit' %}Save changes{% else %}Create department{% endif %}
+        </button>
+      </div>
+    </form>
+  </div>
+
+  {% if mode == 'edit' %}
+    <div class="rv-card" style="max-width:560px">
+      <div class="rv-card__header">
+        <h2>Members</h2>
+        <span class="rv-badge">{{ department.member_count|intcomma }}</span>
+      </div>
+      {% if members %}
+        <div class="rv-scroll">
+          <table class="rv-table">
+            <thead>
+              <tr><th scope="col">User</th><th scope="col">Role</th><th scope="col">Job title</th></tr>
+            </thead>
+            <tbody>
+              {% for member in members %}
+                <tr>
+                  <td>
+                    <div style="display:flex;align-items:center;gap:9px">
+                      <span class="rv-avatar">{{ member.initials }}</span>
+                      <div>
+                        <div style="font-weight:600">{{ member.display_name }}</div>
+                        <div style="font-size:11px;color:var(--rv-text-subtle)">{{ member.email }}</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td><span class="rv-badge">{{ member.get_role_display }}</span></td>
+                  <td>{{ member.job_title|default:"-" }}</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% else %}
+        <div class="rv-empty" style="padding:28px 16px">
+          <h3>No members yet</h3>
+          <p>Assign this department when creating or editing a user.</p>
+          <a class="rv-btn rv-btn--sm" href="{% url 'useradmin:user_list' %}">Go to users</a>
+        </div>
+      {% endif %}
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

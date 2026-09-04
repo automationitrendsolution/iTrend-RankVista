@@ -1127,7 +1127,7 @@ textarea.rv-input { height: auto; padding: 8px 11px; }
 .rv-error p { color: var(--rv-text-muted); max-width: 420px; margin: 0; }
 
 /* ------------------------------------------------------------ responsive */
-@media (max-width: 1280px) {
+@media (max-width: 1180px) {
   .rv-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 

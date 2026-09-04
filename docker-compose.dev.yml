@@ -1,0 +1,30 @@
+# Development overlay: source is bind-mounted and Django autoreloads.
+# Edit a file on the host and the container picks it up - no rebuild, no restart.
+#
+#   docker compose -f docker-compose.yml -f docker-compose.dev.yml up
+
+services:
+  web:
+    build:
+      target: runtime
+    command:
+      - python
+      - manage.py
+      - runserver
+      - 0.0.0.0:8000
+    environment:
+      DEBUG: "true"
+      # StatReloader polls the filesystem, which is what works across the
+      # Windows/macOS bind-mount boundary where inotify events do not fire.
+      DJANGO_WATCHMAN_DISABLE: "1"
+      PYTHONDONTWRITEBYTECODE: "1"
+    volumes:
+      # Live source. Named volumes below keep container-owned paths intact.
+      - .:/app
+      - /app/.venv
+      - /app/staticfiles
+      - app_data:/app/data
+    ports:
+      - "${BIND_HOST:-127.0.0.1}:${WEB_PORT:-8000}:8000"
+    stdin_open: true
+    tty: true
