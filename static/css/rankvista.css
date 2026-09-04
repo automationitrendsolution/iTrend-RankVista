@@ -664,13 +664,25 @@ textarea.rv-input { height: auto; padding: 8px 11px; }
 .rv-cell--untracked { background: #eff1f4; }
 .rv-cell--checking { background: #eef1fd; color: var(--rv-accent); }
 
-.rv-cell--choice::after {
+/* Amazon's Choice reads as a folded corner with a small "a", matching how the
+   badge is shown on the marketplace itself. */
+.rv-cell--choice::before {
   content: "";
   position: absolute;
-  top: 3px; right: 3px;
-  width: 5px; height: 5px;
-  border-radius: 50%;
-  background: var(--rv-accent);
+  top: 0; right: 0;
+  border-style: solid;
+  border-width: 0 14px 14px 0;
+  border-color: transparent #ffffff transparent transparent;
+}
+.rv-cell--choice::after {
+  content: "a";
+  position: absolute;
+  top: -1px; right: 1px;
+  font-family: var(--rv-mono);
+  font-size: 8px;
+  font-weight: 700;
+  line-height: 1;
+  color: #1d2430;
 }
 
 .rv-legend {
@@ -703,14 +715,23 @@ textarea.rv-input { height: auto; padding: 8px 11px; }
 .rv-legend__swatch--unranked { background: var(--rv-surface); }
 .rv-legend__swatch--untracked { background: #eff1f4; }
 .rv-legend__swatch--checking { background: #eef1fd; color: var(--rv-accent); }
-.rv-legend__swatch--choice { background: #cdf0d8; position: relative; }
-.rv-legend__swatch--choice::after {
+.rv-legend__swatch--choice { background: #cdf0d8; position: relative; overflow: hidden; }
+.rv-legend__swatch--choice::before {
   content: "";
   position: absolute;
-  top: 2px; right: 2px;
-  width: 4px; height: 4px;
-  border-radius: 50%;
-  background: var(--rv-accent);
+  top: 0; right: 0;
+  border-style: solid;
+  border-width: 0 9px 9px 0;
+  border-color: transparent #ffffff transparent transparent;
+}
+.rv-legend__swatch--choice::after {
+  content: "a";
+  position: absolute;
+  top: -2px; right: 0;
+  font-family: var(--rv-mono);
+  font-size: 7px;
+  font-weight: 700;
+  color: #1d2430;
 }
 
 /* ------------------------------------------------------------- KPI cards */

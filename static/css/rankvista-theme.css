@@ -608,3 +608,9 @@
 .rv-toasts { z-index: 280; }
 .rv-tooltip { z-index: 290; }
 .rv-loading-bar { z-index: 300; }
+
+/* The Amazon's Choice fold is clipped to the cell and keeps its contrast in dark. */
+.rv-cell { overflow: hidden; }
+:root[data-theme="dark"] .rv-cell--choice::before {
+  border-color: transparent #f2f4f8 transparent transparent;
+}
