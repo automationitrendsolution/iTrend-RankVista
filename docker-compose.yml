@@ -1,0 +1,72 @@
+name: itrend-rankvista
+
+services:
+  mongodb:
+    image: mongo:7
+    container_name: rankvista-mongodb
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_ROOT_USERNAME:-rankvista}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD:-rankvista}
+      MONGO_INITDB_DATABASE: ${MONGODB_DATABASE:-rankvista}
+    ports:
+      - "${MONGODB_PORT:-27017}:27017"
+    volumes:
+      - mongodb_data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping').ok"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+
+  redis:
+    image: redis:7-alpine
+    container_name: rankvista-redis
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes", "--save", "60", "1"]
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: rankvista-web
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      # Container-network defaults; anything set in .env wins.
+      MONGODB_URI: ${MONGODB_URI:-mongodb://rankvista:rankvista@mongodb:27017/rankvista?authSource=admin}
+      REDIS_URL: ${REDIS_URL:-redis://redis:6379/0}
+      DJANGO_DB_NAME: /app/data/db.sqlite3
+    ports:
+      - "${WEB_PORT:-8000}:8000"
+    volumes:
+      - app_data:/app/data
+      - static_files:/app/staticfiles
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8000/healthz/', timeout=5).status < 500 else 1)"]
+      interval: 20s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
+
+volumes:
+  mongodb_data:
+  redis_data:
+  app_data:
+  static_files:

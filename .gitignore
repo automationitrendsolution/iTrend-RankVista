@@ -1,0 +1,115 @@
+# ---------------------------------------------------------------------------
+# iTrend RankVista - Git ignore rules
+# ---------------------------------------------------------------------------
+
+# --- Secrets & local configuration ------------------------------------------
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+secrets/
+credentials.json
+
+# --- Python -----------------------------------------------------------------
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib60/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# --- Virtual environments / uv ----------------------------------------------
+.venv/
+venv/
+env/
+ENV/
+.uv/
+uv.lock.bak
+
+# --- Django ------------------------------------------------------------------
+*.log
+*.pot
+*.sqlite3
+*.sqlite3-journal
+db.sqlite3
+media/
+staticfiles/
+/static_root/
+local_settings.py
+
+# --- Testing / coverage -------------------------------------------------------
+.pytest_cache/
+.coverage
+.coverage.*
+coverage.xml
+htmlcov/
+.tox/
+.nox/
+.cache/
+nosetests.xml
+junit/
+.hypothesis/
+
+# --- Type checkers & linters --------------------------------------------------
+.mypy_cache/
+.dmypy.json
+dmypy.json
+.ruff_cache/
+.pytype/
+.pyre/
+
+# --- Node (only used for optional asset tooling) ------------------------------
+node_modules/
+npm-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# --- Editors & IDEs -----------------------------------------------------------
+.idea/
+.vscode/*
+!.vscode/extensions.json
+*.swp
+*.swo
+*~
+.project
+.pydevproject
+.settings/
+
+# --- OS artefacts -------------------------------------------------------------
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# --- Docker / infra -----------------------------------------------------------
+docker-compose.override.yml
+.docker/
+*.pid
+
+# --- Data dumps (never commit customer data) ----------------------------------
+*.bson
+*.dump
+/dumps/
+/backups/

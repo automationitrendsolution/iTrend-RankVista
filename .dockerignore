@@ -1,0 +1,73 @@
+# ---------------------------------------------------------------------------
+# iTrend RankVista - Docker build context exclusions
+# Keep the build context small and never ship secrets into an image layer.
+# ---------------------------------------------------------------------------
+
+# --- Version control ---------------------------------------------------------
+.git/
+.gitignore
+.gitattributes
+.github/
+
+# --- Secrets -----------------------------------------------------------------
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+secrets/
+
+# --- Python bytecode / build artefacts ---------------------------------------
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+build/
+dist/
+.eggs/
+
+# --- Virtual environments (image builds its own) ------------------------------
+.venv/
+venv/
+env/
+ENV/
+
+# --- Local databases & collected assets ---------------------------------------
+*.sqlite3
+*.sqlite3-journal
+db.sqlite3
+media/
+staticfiles/
+static_root/
+
+# --- Test / tooling caches -----------------------------------------------------
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+.coverage.*
+coverage.xml
+htmlcov/
+.tox/
+.nox/
+.hypothesis/
+
+# --- Node ----------------------------------------------------------------------
+node_modules/
+
+# --- Editors & OS --------------------------------------------------------------
+.idea/
+.vscode/
+*.swp
+*~
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# --- Docs & local-only files ----------------------------------------------------
+*.md
+!README.md
+docker-compose.override.yml
+dumps/
+backups/
+*.log
