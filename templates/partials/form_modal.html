@@ -4,8 +4,10 @@ re-render in place; a success response sends HX-Redirect instead.{% endcomment %
   <div class="rv-modal {{ modal_size|default:'' }}" role="dialog" aria-modal="true"
        aria-labelledby="rv-form-modal-title">
     <form method="post" action="{{ form_action }}" novalidate
-          hx-post="{{ form_action }}" hx-target="#rv-form-modal" hx-swap="outerHTML">
+          hx-post="{{ form_action }}" hx-target="#rv-form-modal" hx-swap="outerHTML"
+          {% if validate_url %}data-rv-validate="{{ validate_url }}"{% endif %}>
       {% csrf_token %}
+      {% if validate_pk %}<input type="hidden" name="_pk" value="{{ validate_pk }}">{% endif %}
 
       <div class="rv-modal__header">
         <div style="min-width:0">

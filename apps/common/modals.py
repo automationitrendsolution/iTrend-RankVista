@@ -19,10 +19,14 @@ def render_modal(
     subtitle: str = "",
     size: str = "",
     wide_fields: tuple[str, ...] = (),
+    validate_url: str = "",
+    validate_pk: str = "",
     extra: dict[str, Any] | None = None,
     status: int = 200,
 ) -> HttpResponse:
     context = {
+        "validate_url": validate_url,
+        "validate_pk": validate_pk,
         "form": form,
         "form_action": action,
         "modal_title": title,
@@ -43,5 +47,8 @@ def redirect_response(url: str) -> HttpResponse:
 
 
 def is_modal(request: HttpRequest) -> bool:
-    """A modal submit is an HTMX request; a direct visit still gets a full page."""
-    return bool(getattr(request, "htmx", False))
+    """A modal submit is a targeted HTMX request.
+    A boosted navigation is excluded: it expects a whole page."""
+    from apps.common.htmx import is_partial
+
+    return is_partial(request)

@@ -18,6 +18,7 @@ from apps.accounts.role_models import RoleDefinition, RolePermission
 from apps.audit.models import AuditAction
 from apps.audit.services import record
 from apps.common.modals import is_modal, redirect_response, render_modal
+from apps.common.validation import bind, touched_fields, validate_response
 
 INPUT_CLASS = "rv-input"
 
@@ -27,17 +28,15 @@ class RoleForm(forms.ModelForm):
 
     class Meta:
         model = RoleDefinition
-        fields = ["label", "code", "description", "rank", "is_active"]
+        fields = ["label", "code", "description", "is_active"]
         widgets = {
             "label": forms.TextInput(attrs={"class": INPUT_CLASS, "placeholder": "Analyst"}),
             "code": forms.TextInput(attrs={"class": INPUT_CLASS, "placeholder": "ANALYST"}),
             "description": forms.TextInput(
                 attrs={"class": INPUT_CLASS, "placeholder": "What this role is for"}
             ),
-            "rank": forms.NumberInput(attrs={"class": INPUT_CLASS, "min": 1, "max": 100}),
             "is_active": forms.CheckboxInput(attrs={"class": "rv-check"}),
         }
-        help_texts = {"rank": "Higher outranks lower. Super Admin is 30."}
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -58,20 +57,24 @@ class RoleForm(forms.ModelForm):
             raise forms.ValidationError("This role code is already in use.")
         return code
 
-    def clean_rank(self) -> int:
-        rank = int(self.cleaned_data["rank"])
-        if self.instance.pk and self.instance.is_system:
-            # Demoting a built-in role below its baseline would lock people out.
-            from apps.accounts.models import ROLE_RANK
 
-            baseline = ROLE_RANK.get(self.instance.code)
-            if baseline and rank != baseline:
-                raise forms.ValidationError(
-                    f"{self.instance.label} is a built-in role and stays at rank {baseline}."
-                )
-        if not 1 <= rank <= 100:
-            raise forms.ValidationError("Rank must be between 1 and 100.")
-        return rank
+def recalculate_rank(role: RoleDefinition) -> None:
+    """Rank follows the granted screens, so ordering is never entered by hand.
+    Built-in roles keep their fixed baseline."""
+    from apps.accounts.models import ROLE_RANK
+
+    baseline = ROLE_RANK.get(role.code)
+    if role.is_system and baseline:
+        rank = baseline
+    else:
+        granted = role.permissions.filter(allowed=True).count()
+        total = max(1, len(page_registry.PAGES))
+        # Scale into 1..29 so a custom role never outranks Super Admin.
+        rank = max(1, min(29, round(granted / total * 25) + 1))
+
+    if role.rank != rank:
+        role.rank = rank
+        role.save(update_fields=["rank", "updated_at"])
 
 
 def _role(pk: str) -> RoleDefinition:
@@ -141,16 +144,29 @@ def role_list(request: HttpRequest) -> HttpResponse:
     )
 
 
+@require_POST
+@super_admin_required
+def role_validate(request: HttpRequest) -> HttpResponse:
+    pk = request.POST.get("_pk") or ""
+    instance = _role(pk) if pk else None
+    return validate_response(
+        bind(RoleForm, request, instance=instance), touched=touched_fields(request)
+    )
+
+
 @super_admin_required
 def role_create(request: HttpRequest) -> HttpResponse:
     form = RoleForm(request.POST or None)
     if request.method == "POST" and form.is_valid():
-        role = form.save()
+        role = form.save(commit=False)
+        role.rank = 10
+        role.save()
         # A new role starts with the same grants as the lowest built-in role.
         for item in page_registry.PAGES:
             RolePermission.objects.create(
                 role=role, page_key=item.key, allowed=item.allows("USER")
             )
+        recalculate_rank(role)
         role_service.invalidate()
         record(AuditAction.ROLE_CHANGED, request=request, target=role.code, detail="created")
         messages.success(request, f"Role '{role.label}' created.")
@@ -162,6 +178,7 @@ def role_create(request: HttpRequest) -> HttpResponse:
             request,
             form=form,
             action=reverse("useradmin:role_create"),
+            validate_url=reverse("useradmin:role_validate"),
             title="Create role",
             subtitle="Define a new access level",
             submit_label="Create role",
@@ -188,6 +205,8 @@ def role_edit(request: HttpRequest, pk: str) -> HttpResponse:
             request,
             form=form,
             action=reverse("useradmin:role_edit", args=[pk]),
+            validate_url=reverse("useradmin:role_validate"),
+            validate_pk=str(pk),
             title="Edit role",
             subtitle=role.label,
             submit_label="Save changes",
@@ -220,6 +239,7 @@ def role_permission_toggle(request: HttpRequest, pk: str) -> HttpResponse:
         permission.allowed = allowed
         permission.save(update_fields=["allowed"])
 
+    recalculate_rank(role)
     role_service.invalidate()
     record(
         AuditAction.ROLE_CHANGED,

@@ -40,8 +40,7 @@
           <div style="min-width:0">
             <h2 class="rv-truncate">{{ role.label }}</h2>
             <div style="font-size:11px;color:var(--rv-text-subtle)">
-              <span class="rv-mono">{{ role.code }}</span> &middot; rank {{ role.rank }}
-              {% if role.is_system %} &middot; built-in{% endif %}
+              <span class="rv-mono">{{ role.code }}</span>{% if role.is_system %} &middot; built-in{% endif %}
             </div>
           </div>
         </div>
@@ -61,7 +60,7 @@
             {% if not role.is_system %}
               <div class="rv-dropdown__divider"></div>
               <form method="post" action="{% url 'useradmin:role_delete' role.pk %}"
-                    onsubmit="return confirm('Delete the {{ role.label|escapejs }} role?')">
+                    data-rv-confirm="Delete the {{ role.label|escapejs }} role?">
                 {% csrf_token %}
                 <button type="submit" class="rv-dropdown__item rv-dropdown__item--danger">
                   <svg aria-hidden="true"><use href="#rv-i-trash"></use></svg> Delete role

@@ -17,7 +17,7 @@
     </a>
     <div class="rv-dropdown__divider"></div>
     <form method="post" action="{% url 'projects:archive' project.project_id %}"
-          onsubmit="return confirm('Archive {{ project.name|escapejs }}? Ranking history is preserved.')">
+          data-rv-confirm="Archive {{ project.name|escapejs }}? Ranking history is preserved.">
       {% csrf_token %}
       <button type="submit" class="rv-dropdown__item rv-dropdown__item--danger">
         <svg aria-hidden="true" width="15" height="15"><use href="#rv-i-trash"></use></svg> Archive project

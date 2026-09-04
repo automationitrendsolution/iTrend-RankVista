@@ -26,8 +26,10 @@ from apps.common.constants import (
 from apps.common.dates import format_window_label, resolve_window
 from apps.common.heatmap import legend as heatmap_legend
 from apps.common.sourcedb import SourceUnavailable
+from apps.common.htmx import is_partial
 from apps.common.modals import is_modal, redirect_response, render_modal
 from apps.common.pagination import parse_page_request
+from apps.common.validation import touched_fields, validate_response
 from apps.keywords import repositories as keyword_repo
 from apps.projects import repositories as repo
 from apps.projects import services
@@ -60,7 +62,7 @@ def _clamped_window(request: HttpRequest, project_id, asin: str):
 def _tab_render(request: HttpRequest, context: dict, tab: str, inner: str) -> HttpResponse:
     """Pick the narrowest template the request needs: page, tab panel or inner list."""
     panel = f"projects/partials/tab_{tab}.html"
-    if not request.htmx:
+    if not is_partial(request):
         return render(request, f"projects/{tab}.html", context)
     if request.headers.get("HX-Target") == TAB_PANEL_TARGET:
         return render(request, "projects/partials/tab_panel.html", {**context, "panel_template": panel})
@@ -114,8 +116,15 @@ def project_list(request: HttpRequest) -> HttpResponse:
         "has_filters": qp.has_active_filters(request, PROJECT_FILTER_KEYS),
         "active_nav": "projects",
     }
-    template = "projects/partials/project_results.html" if request.htmx else "projects/list.html"
+    template = "projects/partials/project_results.html" if is_partial(request) else "projects/list.html"
     return render(request, template, context)
+
+
+@require_POST
+@page_required("projects.create")
+def project_validate(request: HttpRequest) -> HttpResponse:
+    """Validate the project form as it is typed."""
+    return validate_response(ProjectForm(request.POST), touched=touched_fields(request))
 
 
 @page_required("projects.create")
@@ -135,6 +144,7 @@ def project_create(request: HttpRequest) -> HttpResponse:
             request,
             form=form,
             action=reverse("projects:create"),
+            validate_url=reverse("projects:validate"),
             title="Create project",
             subtitle="Track a new product line",
             submit_label="Create project",
@@ -173,6 +183,7 @@ def project_edit(request: HttpRequest, project_id: int) -> HttpResponse:
             request,
             form=form,
             action=reverse("projects:edit", args=[project_id]),
+            validate_url=reverse("projects:validate"),
             title="Edit project",
             subtitle=project.get("name", ""),
             submit_label="Save changes",
@@ -184,6 +195,29 @@ def project_edit(request: HttpRequest, project_id: int) -> HttpResponse:
         "projects/form.html",
         {"form": form, "mode": "edit", "project": project, "active_nav": "projects"},
     )
+
+
+@require_POST
+@page_required("projects.archive")
+def project_bulk_archive(request: HttpRequest) -> HttpResponse:
+    """Archive every selected project. Ranking history is always preserved."""
+    ids = [pid for pid in request.POST.getlist("project_ids") if pid.strip()]
+    if not ids:
+        messages.error(request, "Select at least one project first.")
+        return redirect(reverse("projects:list"))
+
+    archived = 0
+    for project_id in ids:
+        try:
+            if services.archive_project(project_id=project_id, request=request):
+                archived += 1
+        except SourceUnavailable:
+            continue
+
+    messages.success(
+        request, f"{archived} project{'' if archived == 1 else 's'} archived."
+    )
+    return redirect(reverse("projects:list"))
 
 
 @require_POST

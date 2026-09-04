@@ -1,0 +1,24 @@
+{% comment %}Confirmation dialog template. Cloned and filled by the shell script,
+so destructive actions never fall back to the browser's own confirm box.{% endcomment %}
+<template id="rv-confirm-template">
+  <div class="rv-modal-backdrop rv-confirm">
+    <div class="rv-modal rv-modal--confirm" role="alertdialog" aria-modal="true"
+         aria-labelledby="rv-confirm-title" aria-describedby="rv-confirm-body">
+      <div class="rv-modal__header">
+        <div style="display:flex;align-items:center;gap:10px;min-width:0">
+          <span class="rv-confirm__icon" data-rv-confirm-icon aria-hidden="true">
+            <svg><use href="#rv-i-alert"></use></svg>
+          </span>
+          <h2 id="rv-confirm-title" data-rv-confirm-title>Are you sure?</h2>
+        </div>
+      </div>
+      <div class="rv-modal__body">
+        <p id="rv-confirm-body" data-rv-confirm-body style="margin:0;color:var(--rv-text-muted)"></p>
+      </div>
+      <div class="rv-modal__footer">
+        <button type="button" class="rv-btn" data-rv-confirm-cancel>Cancel</button>
+        <button type="button" class="rv-btn rv-btn--primary" data-rv-confirm-accept>Confirm</button>
+      </div>
+    </div>
+  </div>
+</template>

@@ -5,7 +5,9 @@
       <div class="rv-empty__icon"><svg aria-hidden="true"><use href="#rv-i-building"></use></svg></div>
       <h3>No departments found</h3>
       <p>{% if search %}No department matches "{{ search }}".{% else %}Create a department to group users by team.{% endif %}</p>
-      <a class="rv-btn rv-btn--primary" href="{% url 'useradmin:department_create' %}">Create Department</a>
+      <a class="rv-btn rv-btn--primary" href="{% url 'useradmin:department_create' %}"
+         hx-get="{% url 'useradmin:department_create' %}" hx-target="#rv-modal-root"
+         hx-swap="innerHTML" hx-push-url="false">Create Department</a>
     </div>
   {% else %}
     <div class="rv-scroll">
@@ -56,7 +58,7 @@
                   </form>
                   <div class="rv-dropdown__divider"></div>
                   <form method="post" action="{% url 'useradmin:department_delete' row.pk %}"
-                        onsubmit="return confirm('Delete {{ row.name|escapejs }}? Members keep their accounts but lose this department.')">
+                        data-rv-confirm="Delete {{ row.name|escapejs }}? Members keep their accounts but lose this department.">
                     {% csrf_token %}
                     <button type="submit" class="rv-dropdown__item rv-dropdown__item--danger">
                       <svg aria-hidden="true"><use href="#rv-i-trash"></use></svg> Delete department

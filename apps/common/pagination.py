@@ -134,4 +134,6 @@ def querystring(request: HttpRequest, **overrides: Any) -> str:
         else:
             params[key] = value
     encoded = params.urlencode()
-    return f"?{encoded}" if encoded else ""
+    # An empty string would render href="", which resolves to the directory,
+    # not the current page. Always emit a usable URL.
+    return f"{request.path}?{encoded}" if encoded else request.path

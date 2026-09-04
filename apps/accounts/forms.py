@@ -126,6 +126,12 @@ class UserCreateForm(forms.ModelForm):
         widget=forms.PasswordInput(attrs={"class": INPUT_CLASS, "autocomplete": "new-password"}),
     )
 
+    # The full-width toggle renders last so it never splits a paired row.
+    field_order = [
+        "email", "username", "full_name", "role",
+        "department", "job_title", "password1", "password2", "is_active",
+    ]
+
     class Meta:
         model = User
         fields = ["email", "username", "full_name", "role", "department", "job_title", "is_active"]
@@ -180,6 +186,10 @@ class UserCreateForm(forms.ModelForm):
 
 class UserUpdateForm(forms.ModelForm):
     """Edit an existing user without ever touching the password hash."""
+
+    field_order = [
+        "email", "username", "full_name", "role", "department", "job_title", "is_active",
+    ]
 
     class Meta:
         model = User

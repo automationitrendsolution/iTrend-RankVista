@@ -31,9 +31,12 @@
   }
 
   /* -------------------------------------------------------- clock */
+  var clockTimer = null;
+
   function initClock() {
     var nodes = document.querySelectorAll("[data-rv-clock-time]");
     if (!nodes.length) return;
+    window.clearInterval(clockTimer);
 
     // Asia/Kolkata is resolved by the browser, so DST and offsets stay correct.
     var formatter = new Intl.DateTimeFormat("en-IN", {
@@ -52,8 +55,10 @@
     }
 
     tick();
-    window.setInterval(tick, 1000);
+    clockTimer = window.setInterval(tick, 1000);
   }
+
+  RV.startClock = initClock;
 
   /* ---------------------------------------------------- dropdowns */
   /* A menu inside a scroll container is clipped by its overflow. When one opens
@@ -138,13 +143,17 @@
       attributeFilter: ["class"],
     });
 
-    ["scroll", "resize"].forEach(function (name) {
-      window.addEventListener(name, function () {
-        if (portalled) {
-          $(".rv-dropdown").removeClass("is-open");
-          closePortal();
-        }
-      }, true);
+    // A scroll inside the menu is the user reading it, not leaving it.
+    window.addEventListener("scroll", function (event) {
+      if (!portalled) return;
+      if (event.target && event.target.closest && event.target.closest(".rv-dropdown__menu")) return;
+      $(".rv-dropdown").removeClass("is-open");
+      closePortal();
+    }, true);
+    window.addEventListener("resize", function () {
+      if (!portalled) return;
+      $(".rv-dropdown").removeClass("is-open");
+      closePortal();
     });
 
     document.addEventListener("keydown", function (event) {

@@ -50,6 +50,19 @@ Living status for iTrend RankVista. Updated as work progresses.
 
 - Ongoing UI refinement against the reference workflow.
 
+### Recent UI work
+
+- **No page reloads anywhere.** `hx-boost` on the shell plus scoped HTMX targets;
+  scripts are deferred in `<head>` so a boosted body swap cannot re-execute them.
+- **Editable roles and permissions.** Roles live in MongoDB with a per-screen toggle
+  grid; rank is derived from the granted screens, never entered by hand.
+- **Custom select, dropdown and confirm dialogs.** The OS select popup and
+  `window.confirm` are both replaced; menus are portalled so nothing clips them.
+- **Live form validation.** The same Django form validates over HTTP as the user
+  types, so uniqueness and format rules are never duplicated in JavaScript.
+- **Dark/light theme, live IST clock, skeleton loading, chart hover tooltips.**
+- Tables default to 10 rows; every list paginates server-side.
+
 ## Remaining
 
 - Export (CSV/Sheets) for the keyword and matrix tables.

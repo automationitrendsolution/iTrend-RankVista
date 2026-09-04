@@ -15,7 +15,9 @@ from apps.accounts.forms import PasswordResetForm, UserCreateForm, UserUpdateFor
 from apps.accounts.models import Role, User
 from apps.accounts.permissions import super_admin_required
 from apps.accounts.selectors import DEFAULT_USER_SORT, list_users, user_stats
+from apps.common.htmx import is_partial
 from apps.common.modals import is_modal, redirect_response, render_modal
+from apps.common.validation import bind, touched_fields, validate_response
 from apps.common.pagination import parse_page_request
 
 
@@ -58,8 +60,24 @@ def user_list(request: HttpRequest) -> HttpResponse:
         "roles": Role.choices,
         "active_nav": "users",
     }
-    template = "accounts/partials/user_table.html" if request.htmx else "accounts/user_list.html"
+    template = "accounts/partials/user_table.html" if is_partial(request) else "accounts/user_list.html"
     return render(request, template, context)
+
+
+@require_POST
+@super_admin_required
+def user_validate(request: HttpRequest) -> HttpResponse:
+    """Validate the create-user form as it is typed."""
+    return validate_response(bind(UserCreateForm, request), touched=touched_fields(request))
+
+
+@require_POST
+@super_admin_required
+def user_edit_validate(request: HttpRequest, pk: str) -> HttpResponse:
+    user = _target(request, pk)
+    return validate_response(
+        bind(UserUpdateForm, request, instance=user), touched=touched_fields(request)
+    )
 
 
 @super_admin_required
@@ -76,6 +94,7 @@ def user_create(request: HttpRequest) -> HttpResponse:
             request,
             form=form,
             action=reverse("useradmin:user_create"),
+            validate_url=reverse("useradmin:user_validate"),
             title="Create user",
             subtitle="Provision access to the platform",
             submit_label="Create user",
@@ -102,6 +121,7 @@ def user_edit(request: HttpRequest, pk: str) -> HttpResponse:
             request,
             form=form,
             action=reverse("useradmin:user_edit", args=[pk]),
+            validate_url=reverse("useradmin:user_edit_validate", args=[pk]),
             title="Edit user",
             subtitle=user.email,
             submit_label="Save changes",

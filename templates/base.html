@@ -23,6 +23,13 @@
       }
     })();
   </script>
+  <script defer src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/htmx.org@1.9.12/dist/htmx.min.js"></script>
+  <script defer src="{% static 'js/rankvista.js' %}"></script>
+  <script defer src="{% static 'js/rankvista-shell.js' %}"></script>
+  <script defer src="{% static 'js/rankvista-select.js' %}"></script>
+  <script defer src="{% static 'js/rankvista-validate.js' %}"></script>
+  <script defer src="{% static 'js/rankvista-ux.js' %}"></script>
   {% block head %}{% endblock %}
 </head>
 <body{% if request.user.is_authenticated and not hide_shell %} class=""{% endif %}>
@@ -31,7 +38,7 @@
 {% if hide_shell or not request.user.is_authenticated %}
   {% block bare %}{% endblock %}
 {% else %}
-<div class="rv-shell">
+<div class="rv-shell" hx-boost="true">
   <aside class="rv-sidebar" id="rv-sidebar">
     <div class="rv-sidebar__brand">
       <span class="rv-logo" aria-hidden="true">RV</span>
@@ -117,14 +124,9 @@
 
 <div id="rv-modal-root"></div>
 {% include "partials/skeletons.html" %}
+{% include "partials/confirm_modal.html" %}
 {% include "partials/toasts.html" %}
 
-<script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/htmx.org@1.9.12/dist/htmx.min.js"></script>
-<script src="{% static 'js/rankvista.js' %}"></script>
-<script src="{% static 'js/rankvista-shell.js' %}"></script>
-<script src="{% static 'js/rankvista-select.js' %}"></script>
-<script src="{% static 'js/rankvista-ux.js' %}"></script>
 {% block scripts %}{% endblock %}
 </body>
 </html>

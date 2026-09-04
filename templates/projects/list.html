@@ -73,6 +73,18 @@
     <strong data-rv-selection-count>0</strong> selected
   </span>
   <div class="rv-toolbar__spacer"></div>
+  {% if can|get:"projects.archive" %}
+    <form method="post" action="{% url 'projects:bulk_archive' %}" data-rv-selection-form
+          data-rv-confirm="Archive the selected projects? Ranking history is preserved."
+          data-rv-confirm-title="Archive projects"
+          data-rv-confirm-label="Archive">
+      {% csrf_token %}
+      <button type="submit" class="rv-btn rv-btn--sm rv-btn--danger"
+              title="Archive every selected project">
+        <svg aria-hidden="true"><use href="#rv-i-trash"></use></svg> Archive selected
+      </button>
+    </form>
+  {% endif %}
   <button type="button" class="rv-btn rv-btn--sm" data-rv-selection-clear>Clear</button>
 </div>
 

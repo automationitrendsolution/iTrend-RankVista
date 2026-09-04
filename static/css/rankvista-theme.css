@@ -512,3 +512,99 @@
 .rv-selection-bar[hidden] { display: none; }
 .rv-selection-bar__all { display: inline-flex; align-items: center; gap: 7px; cursor: pointer; }
 .rv-selection-bar__count strong { color: var(--rv-accent); font-variant-numeric: tabular-nums; }
+
+/* ------------------------------------------------------- confirm dialog */
+.rv-modal--confirm { max-width: 420px; }
+.rv-confirm .rv-modal__header { border-bottom: 0; padding-bottom: 4px; }
+.rv-confirm .rv-modal__body { padding-top: 4px; }
+.rv-confirm__icon {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--rv-warning-soft);
+  color: var(--rv-warning);
+  flex-shrink: 0;
+}
+.rv-confirm__icon svg { width: 17px; height: 17px; }
+.rv-confirm__icon.is-danger { background: var(--rv-danger-soft); color: var(--rv-danger); }
+
+.rv-btn--danger-solid {
+  background: var(--rv-danger);
+  border-color: var(--rv-danger);
+  color: #fff;
+}
+.rv-btn--danger-solid:hover { background: #a92334; border-color: #a92334; color: #fff; }
+
+/* The empty-state action opens the same modal as the toolbar button. */
+.rv-empty .rv-btn { margin-top: 2px; }
+
+/* --------------------------------------------------------- live validation */
+.rv-field.is-invalid .rv-input,
+.rv-field.is-invalid .rv-select-btn {
+  border-color: var(--rv-danger);
+  background: var(--rv-danger-soft);
+}
+.rv-field.is-invalid .rv-input:focus {
+  box-shadow: 0 0 0 3px rgba(192, 43, 61, 0.14);
+}
+.rv-field.is-valid .rv-input,
+.rv-field.is-valid .rv-select-btn { border-color: var(--rv-success); }
+
+.rv-field__error {
+  display: flex;
+  align-items: flex-start;
+  gap: 5px;
+  color: var(--rv-danger);
+  font-size: 11.5px;
+  margin-top: 4px;
+  animation: rv-field-error 0.16s ease;
+}
+.rv-field__error::before {
+  content: "!";
+  display: inline-grid;
+  place-items: center;
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  background: var(--rv-danger);
+  color: #fff;
+  font-size: 9px;
+  font-weight: 700;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+@keyframes rv-field-error {
+  from { opacity: 0; transform: translateY(-2px); }
+  to { opacity: 1; transform: none; }
+}
+
+/* A blocked submit stays clickable so the server has the final say. */
+.rv-btn.is-blocked { opacity: 0.65; }
+
+/* A long option list scrolls inside the menu rather than the page. */
+.rv-select-menu--portal { overscroll-behavior: contain; scrollbar-width: thin; }
+.rv-dropdown__menu--portal { overscroll-behavior: contain; scrollbar-width: thin; }
+.rv-select-menu--portal::-webkit-scrollbar,
+.rv-dropdown__menu--portal::-webkit-scrollbar { width: 9px; }
+.rv-select-menu--portal::-webkit-scrollbar-thumb,
+.rv-dropdown__menu--portal::-webkit-scrollbar-thumb {
+  background: var(--rv-border-strong);
+  border-radius: 5px;
+  border: 2px solid var(--rv-surface);
+}
+
+/* The grid owns the vertical rhythm; fields no longer add their own margin. */
+.rv-form-grid { row-gap: 11px; }
+.rv-form-grid .rv-field { margin-bottom: 0; }
+.rv-modal__body > .rv-form-grid:last-child { padding-bottom: 2px; }
+
+/* ------------------------------------------------------------- z-index scale */
+/* One ordered scale so a menu can never float above the modal that owns it. */
+.rv-modal-backdrop { z-index: 200; }
+.rv-dropdown__menu--portal { z-index: 260; }
+.rv-select-menu--portal { z-index: 270; }
+.rv-toasts { z-index: 280; }
+.rv-tooltip { z-index: 290; }
+.rv-loading-bar { z-index: 300; }

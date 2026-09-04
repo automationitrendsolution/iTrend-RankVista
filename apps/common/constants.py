@@ -5,7 +5,7 @@ from __future__ import annotations
 # --------------------------------------------------------------------------
 # Pagination
 # --------------------------------------------------------------------------
-DEFAULT_PAGE_SIZE = 25
+DEFAULT_PAGE_SIZE = 10
 PAGE_SIZE_CHOICES = (10, 25, 50, 250)
 MAX_PAGE_SIZE = 250
 

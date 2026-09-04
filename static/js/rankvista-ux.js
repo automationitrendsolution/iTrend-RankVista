@@ -49,6 +49,12 @@
     document.body.addEventListener("htmx:afterSwap", function (event) {
       var target = event.detail && event.detail.target;
       if (!target) return;
+      // A boosted swap replaces the body, so components must be rebuilt.
+      if (target === document.body && window.RV) {
+        if (RV.enhanceSelects) RV.enhanceSelects(document);
+        if (RV.scanValidation) RV.scanValidation(document);
+        if (RV.startClock) RV.startClock();
+      }
       target.classList.remove("rv-swapping");
       target.classList.add("rv-swapped-in");
       window.setTimeout(function () {

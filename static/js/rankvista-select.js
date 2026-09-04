@@ -8,6 +8,11 @@
 
   function build(select) {
     if (select.dataset.rvEnhanced) return;
+    // A re-executed script could otherwise wrap the same select twice.
+    if (select.closest(".rv-select-wrap")) {
+      select.dataset.rvEnhanced = "1";
+      return;
+    }
     select.dataset.rvEnhanced = "1";
 
     var id = "rv-select-" + ++counter;
@@ -189,9 +194,13 @@
     document.addEventListener("click", function (event) {
       if (!event.target.closest(".rv-select-wrap, .rv-select-menu")) closeAll();
     });
-    ["scroll", "resize"].forEach(function (name) {
-      window.addEventListener(name, function () { closeAll(); }, true);
-    });
+    // Reposition or close on page scroll, but never when the scroll happened
+    // inside the open menu itself.
+    window.addEventListener("scroll", function (event) {
+      if (event.target && event.target.closest && event.target.closest(".rv-select-menu")) return;
+      closeAll();
+    }, true);
+    window.addEventListener("resize", function () { closeAll(); });
 
     document.body.addEventListener("htmx:afterSwap", function (event) {
       closeAll();

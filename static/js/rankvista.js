@@ -4,6 +4,7 @@
 
   var RV = (window.RV = window.RV || {});
   var STORAGE_KEY = "rv.sidebar.collapsed";
+  var TOAST_TIMEOUT = 3000;
 
   /* ---------------------------------------------------------- sidebar */
   function initSidebar() {
@@ -124,7 +125,7 @@
       toast.fadeOut(180, function () {
         toast.remove();
       });
-    }, 5000);
+    }, TOAST_TIMEOUT);
   };
 
   function initToasts() {
@@ -135,7 +136,7 @@
       $(".rv-toast[data-rv-autohide]").fadeOut(200, function () {
         $(this).remove();
       });
-    }, 5000);
+    }, TOAST_TIMEOUT);
   }
 
   /* --------------------------------------------------------- password */
@@ -170,6 +171,15 @@
     });
 
     $(document).on("change", "[data-rv-select-row]", updateSelectionCount);
+
+    // Copy the current selection into the bulk form just before it submits.
+    $(document).on("submit", "form[data-rv-selection-form]", function () {
+      var form = this;
+      $(form).find('input[name="project_ids"]').remove();
+      $("[data-rv-select-row]:checked").each(function () {
+        $("<input>", { type: "hidden", name: "project_ids", value: this.value }).appendTo(form);
+      });
+    });
 
     $(document).on("click", "[data-rv-selection-clear]", function () {
       $("[data-rv-select-row], [data-rv-select-all]").prop("checked", false).prop("indeterminate", false);
@@ -237,6 +247,74 @@
     });
   }
 
+  /* ----------------------------------------------------- confirm */
+  RV.confirm = function (options) {
+    return new Promise(function (resolve) {
+      var template = document.getElementById("rv-confirm-template");
+      if (!template) {
+        // Without the template there is nothing to show; refuse rather than
+        // silently performing a destructive action.
+        resolve(false);
+        return;
+      }
+
+      var node = template.content.firstElementChild.cloneNode(true);
+      node.querySelector("[data-rv-confirm-title]").textContent = options.title || "Are you sure?";
+      node.querySelector("[data-rv-confirm-body]").textContent = options.message || "";
+
+      var accept = node.querySelector("[data-rv-confirm-accept]");
+      accept.textContent = options.confirmLabel || "Confirm";
+      if (options.danger) {
+        accept.classList.remove("rv-btn--primary");
+        accept.classList.add("rv-btn--danger-solid");
+        node.querySelector("[data-rv-confirm-icon]").classList.add("is-danger");
+      }
+
+      function settle(result) {
+        node.remove();
+        $(document).off("keydown.rvconfirm");
+        resolve(result);
+      }
+
+      accept.addEventListener("click", function () { settle(true); });
+      node.querySelector("[data-rv-confirm-cancel]").addEventListener("click", function () { settle(false); });
+      node.addEventListener("click", function (event) { if (event.target === node) settle(false); });
+      $(document).on("keydown.rvconfirm", function (event) {
+        if (event.key === "Escape") settle(false);
+      });
+
+      document.body.appendChild(node);
+      accept.focus();
+    });
+  };
+
+  function initConfirm() {
+    $(document).on("submit", "form[data-rv-confirm]", function (event) {
+      var form = this;
+      if (form.dataset.rvConfirmed === "1") {
+        delete form.dataset.rvConfirmed;
+        return;
+      }
+      event.preventDefault();
+      event.stopImmediatePropagation();
+
+      RV.confirm({
+        title: form.dataset.rvConfirmTitle || "Please confirm",
+        message: form.dataset.rvConfirm,
+        confirmLabel: form.dataset.rvConfirmLabel || "Confirm",
+        danger: true,
+      }).then(function (ok) {
+        if (!ok) return;
+        form.dataset.rvConfirmed = "1";
+        if (typeof form.requestSubmit === "function") {
+          form.requestSubmit();
+        } else {
+          form.submit();
+        }
+      });
+    });
+  }
+
   /* -------------------------------------------------- clickable rows */
   function initRowLinks() {
     $(document).on("click", ".rv-row-link", function (event) {
@@ -257,6 +335,7 @@
     initTableSelection();
     initMatrixScroll();
     initRowLinks();
+    initConfirm();
     initHtmx();
   });
 })(window.jQuery);

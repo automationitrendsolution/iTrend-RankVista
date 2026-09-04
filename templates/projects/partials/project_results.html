@@ -16,7 +16,9 @@
       {% if search or has_filters %}
         <a class="rv-btn" href="{% url 'projects:list' %}">Clear filters</a>
       {% else %}
-        <a class="rv-btn rv-btn--primary" href="{% url 'projects:create' %}">
+        <a class="rv-btn rv-btn--primary" href="{% url 'projects:create' %}"
+           hx-get="{% url 'projects:create' %}" hx-target="#rv-modal-root"
+           hx-swap="innerHTML" hx-push-url="false">
           <svg aria-hidden="true"><use href="#rv-i-plus"></use></svg> Create Project
         </a>
       {% endif %}

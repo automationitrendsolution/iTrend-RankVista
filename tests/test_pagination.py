@@ -4,16 +4,17 @@ from __future__ import annotations
 
 from django.test import RequestFactory
 
-from apps.common.constants import MAX_PAGE_SIZE
+from apps.common.constants import DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE
 from apps.common.pagination import Page, parse_page_request, querystring
 
 rf = RequestFactory()
 
 
 def test_defaults_when_no_parameters():
+    """Tables open at 10 rows; larger pages are opt-in."""
     page_req = parse_page_request(rf.get("/projects/"))
     assert page_req.number == 1
-    assert page_req.size == 25
+    assert page_req.size == DEFAULT_PAGE_SIZE == 10
     assert page_req.offset == 0
 
 
@@ -80,6 +81,7 @@ def test_page_beyond_the_end_stays_navigable():
 def test_querystring_preserves_and_overrides_filters():
     request = rf.get("/projects/?q=snow&sort=name_asc&page=2")
     result = querystring(request, page=5)
+    assert result.startswith("/projects/?")
     assert "q=snow" in result and "sort=name_asc" in result and "page=5" in result
 
 
@@ -89,5 +91,7 @@ def test_querystring_drops_none_values():
     assert "q=" not in result and "page=2" in result
 
 
-def test_querystring_is_empty_when_nothing_remains():
-    assert querystring(rf.get("/projects/")) == ""
+def test_querystring_falls_back_to_the_path():
+    """An empty string would render href="", which resolves to the directory."""
+    assert querystring(rf.get("/projects/")) == "/projects/"
+    assert querystring(rf.get("/projects/?q=x"), q=None) == "/projects/"

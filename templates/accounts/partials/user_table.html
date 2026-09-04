@@ -5,7 +5,9 @@
       <div class="rv-empty__icon"><svg aria-hidden="true" width="22" height="22"><use href="#rv-i-users"></use></svg></div>
       <h3>No users found</h3>
       <p>{% if search %}No user matches "{{ search }}".{% else %}Create the first platform user to get started.{% endif %}</p>
-      <a class="rv-btn rv-btn--primary" href="{% url 'useradmin:user_create' %}">Create User</a>
+      <a class="rv-btn rv-btn--primary" href="{% url 'useradmin:user_create' %}"
+         hx-get="{% url 'useradmin:user_create' %}" hx-target="#rv-modal-root"
+         hx-swap="innerHTML" hx-push-url="false">Create User</a>
     </div>
   {% else %}
     <div class="rv-scroll">
@@ -78,7 +80,7 @@
                     </form>
                     <div class="rv-dropdown__divider"></div>
                     <form method="post" action="{% url 'useradmin:user_delete' row.pk %}"
-                          onsubmit="return confirm('Delete {{ row.email|escapejs }}? This cannot be undone.')">
+                          data-rv-confirm="Delete {{ row.email|escapejs }}? This cannot be undone.">
                       {% csrf_token %}
                       <button type="submit" class="rv-dropdown__item rv-dropdown__item--danger">
                         <svg aria-hidden="true" width="15" height="15"><use href="#rv-i-trash"></use></svg> Delete user

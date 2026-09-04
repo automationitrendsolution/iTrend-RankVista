@@ -14,7 +14,9 @@ from apps.accounts.models import Department, Role, User
 from apps.accounts.permissions import super_admin_required
 from apps.audit.models import AuditAction
 from apps.audit.services import record
+from apps.common.htmx import is_partial
 from apps.common.modals import is_modal, redirect_response, render_modal
+from apps.common.validation import bind, touched_fields, validate_response
 from apps.common.pagination import parse_page_request
 
 DEPARTMENT_SORT = {
@@ -71,9 +73,20 @@ def department_list(request: HttpRequest) -> HttpResponse:
         "active_nav": "departments",
     }
     template = (
-        "accounts/partials/department_table.html" if request.htmx else "accounts/department_list.html"
+        "accounts/partials/department_table.html" if is_partial(request) else "accounts/department_list.html"
     )
     return render(request, template, context)
+
+
+@require_POST
+@super_admin_required
+def department_validate(request: HttpRequest) -> HttpResponse:
+    """Validate the department form as it is typed, including uniqueness."""
+    pk = request.POST.get("_pk") or ""
+    instance = _department(pk) if pk else None
+    return validate_response(
+        bind(DepartmentForm, request, instance=instance), touched=touched_fields(request)
+    )
 
 
 @super_admin_required
@@ -96,6 +109,7 @@ def department_create(request: HttpRequest) -> HttpResponse:
             request,
             form=form,
             action=reverse("useradmin:department_create"),
+            validate_url=reverse("useradmin:department_validate"),
             title="Create department",
             subtitle="Group users by team",
             submit_label="Create department",
@@ -125,6 +139,8 @@ def department_edit(request: HttpRequest, pk: str) -> HttpResponse:
             request,
             form=form,
             action=reverse("useradmin:department_edit", args=[pk]),
+            validate_url=reverse("useradmin:department_validate"),
+            validate_pk=str(pk),
             title="Edit department",
             subtitle=department.name,
             submit_label="Save changes",
