@@ -1,0 +1,13 @@
+{% if messages %}
+<div class="rv-toasts" id="rv-toasts" role="status" aria-live="polite">
+  {% for message in messages %}
+    <div class="rv-toast rv-toast--{{ message.tags|default:'info' }}" data-rv-autohide>
+      <svg aria-hidden="true" width="16" height="16" style="margin-top:2px;flex-shrink:0">
+        <use href="{% if 'error' in message.tags %}#rv-i-alert{% else %}#rv-i-check{% endif %}"></use>
+      </svg>
+      <div>{{ message }}</div>
+      <button type="button" class="rv-toast__close" aria-label="Dismiss">&times;</button>
+    </div>
+  {% endfor %}
+</div>
+{% endif %}

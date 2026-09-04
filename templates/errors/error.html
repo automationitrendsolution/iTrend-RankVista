@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+
+{% block title %}{{ status }} {{ title }} - {{ BRAND.NAME }}{% endblock %}
+
+{% block content %}
+<div class="rv-error">
+  <div class="rv-error__code">{{ status }}</div>
+  <h1>{{ title }}</h1>
+  <p>{{ message }}</p>
+  <div style="display:flex;gap:9px;margin-top:8px">
+    <a class="rv-btn rv-btn--primary" href="{% url 'projects:list' %}">Back to projects</a>
+    <button type="button" class="rv-btn" onclick="history.back()">Go back</button>
+  </div>
+</div>
+{% endblock %}
+
+{% block bare %}
+<div class="rv-error" style="min-height:100vh">
+  <div class="rv-error__code">{{ status }}</div>
+  <h1>{{ title }}</h1>
+  <p>{{ message }}</p>
+  <a class="rv-btn rv-btn--primary" href="{% url 'accounts:login' %}" style="margin-top:8px">Go to sign in</a>
+</div>
+{% endblock %}

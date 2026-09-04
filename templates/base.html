@@ -1,0 +1,103 @@
+{% load static rv %}<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="description" content="{{ BRAND.TAGLINE }}">
+  <meta name="robots" content="noindex, nofollow">
+  <title>{% block title %}{{ BRAND.NAME }}{% endblock %}</title>
+  <link rel="icon" href="{% static 'img/favicon.svg' %}" type="image/svg+xml">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap-grid.min.css">
+  <link rel="stylesheet" href="{% static 'css/rankvista.css' %}">
+  {% block head %}{% endblock %}
+</head>
+<body{% if request.user.is_authenticated and not hide_shell %} class=""{% endif %}>
+{% include "partials/icons.html" %}
+
+{% if hide_shell or not request.user.is_authenticated %}
+  {% block bare %}{% endblock %}
+{% else %}
+<div class="rv-shell">
+  <aside class="rv-sidebar" id="rv-sidebar">
+    <div class="rv-sidebar__brand">
+      <span class="rv-logo" aria-hidden="true">RV</span>
+      <span class="rv-brand-text">
+        <strong>{{ BRAND.SHORT_NAME }}</strong>
+        <span>{{ BRAND.COMPANY }}</span>
+      </span>
+    </div>
+
+    <nav class="rv-nav" aria-label="Main navigation">
+      <div class="rv-nav__label">Workspace</div>
+      <a class="rv-nav__item {% if active_nav == 'projects' %}is-active{% endif %}"
+         href="{% url 'projects:list' %}" {% if active_nav == 'projects' %}aria-current="page"{% endif %}>
+        <svg aria-hidden="true"><use href="#rv-i-folder"></use></svg><span>Projects</span>
+      </a>
+      {% if request.user.is_super_admin %}
+        <div class="rv-nav__label">Administration</div>
+        <a class="rv-nav__item {% if active_nav == 'users' %}is-active{% endif %}"
+           href="{% url 'useradmin:user_list' %}" {% if active_nav == 'users' %}aria-current="page"{% endif %}>
+          <svg aria-hidden="true"><use href="#rv-i-users"></use></svg><span>Users</span>
+        </a>
+      {% endif %}
+    </nav>
+
+    <div class="rv-sidebar__footer">
+      <div class="rv-dropdown" style="width:100%">
+        <button type="button" class="rv-profile" data-rv-dropdown aria-haspopup="true" aria-expanded="false">
+          <span class="rv-avatar">{{ request.user.initials }}</span>
+          <span class="rv-profile__meta">
+            <strong>{{ request.user.display_name }}</strong>
+            <span>{{ request.user.get_role_display }}</span>
+          </span>
+        </button>
+        <div class="rv-dropdown__menu" style="left:0;right:auto;bottom:calc(100% + 4px);top:auto">
+          <a class="rv-dropdown__item" href="{% url 'accounts:profile' %}">
+            <svg aria-hidden="true" width="15" height="15"><use href="#rv-i-user"></use></svg> Profile
+          </a>
+          {% if request.user.is_super_admin %}
+            <a class="rv-dropdown__item" href="{% url 'useradmin:user_list' %}">
+              <svg aria-hidden="true" width="15" height="15"><use href="#rv-i-users"></use></svg> User management
+            </a>
+          {% endif %}
+          <div class="rv-dropdown__divider"></div>
+          <form method="post" action="{% url 'accounts:logout' %}">
+            {% csrf_token %}
+            <button type="submit" class="rv-dropdown__item rv-dropdown__item--danger">
+              <svg aria-hidden="true" width="15" height="15"><use href="#rv-i-logout"></use></svg> Sign out
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <div class="rv-main">
+    <header class="rv-header">
+      <button type="button" class="rv-btn rv-btn--ghost rv-btn--icon d-lg-none" data-rv-toggle-nav
+              aria-label="Open navigation">
+        <svg aria-hidden="true"><use href="#rv-i-menu"></use></svg>
+      </button>
+      <button type="button" class="rv-btn rv-btn--ghost rv-btn--icon d-none d-lg-inline-flex"
+              data-rv-toggle-sidebar aria-label="Toggle sidebar">
+        <svg aria-hidden="true"><use href="#rv-i-panel"></use></svg>
+      </button>
+      <div style="flex:1;min-width:0">{% block header %}{% endblock %}</div>
+    </header>
+
+    <main class="rv-content" id="rv-content">
+      {% block content %}{% endblock %}
+    </main>
+  </div>
+</div>
+{% endif %}
+
+<div id="rv-modal-root"></div>
+{% include "partials/toasts.html" %}
+
+<script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/htmx.org@1.9.12/dist/htmx.min.js"></script>
+<script src="{% static 'js/rankvista.js' %}"></script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

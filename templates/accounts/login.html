@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Sign in - {{ BRAND.NAME }}{% endblock %}
+
+{% block bare %}
+<div class="rv-auth">
+  <section class="rv-auth__brand">
+    <div class="rv-auth__logo">
+      <span class="rv-logo" aria-hidden="true">RV</span>
+      <strong>{{ BRAND.NAME }}</strong>
+    </div>
+
+    <div class="rv-auth__pitch">
+      <h1>Every keyword, every ASIN, every rank movement in one place.</h1>
+      <p>{{ BRAND.TAGLINE }} - track organic position history across marketplaces and turn search visibility into decisions your team can act on.</p>
+
+      <div class="rv-auth__features">
+        <div class="rv-auth__feature">
+          <svg aria-hidden="true"><use href="#rv-i-chart"></use></svg>
+          <div>Historical rank matrix with heat-mapped daily, weekly and monthly views.</div>
+        </div>
+        <div class="rv-auth__feature">
+          <svg aria-hidden="true"><use href="#rv-i-trend"></use></svg>
+          <div>Visibility, average position and Amazon's Choice tracking per ASIN.</div>
+        </div>
+        <div class="rv-auth__feature">
+          <svg aria-hidden="true"><use href="#rv-i-box"></use></svg>
+          <div>Project, ASIN and keyword intelligence across every Amazon marketplace.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="rv-auth__footer">&copy; {% now "Y" %} {{ BRAND.COMPANY }}. All rights reserved.</div>
+  </section>
+
+  <section class="rv-auth__panel">
+    <form class="rv-auth__form" method="post" action="{% url 'accounts:login' %}" novalidate data-rv-loading>
+      {% csrf_token %}
+      <input type="hidden" name="next" value="{{ next }}">
+
+      <h2>Sign in</h2>
+      <p>Use your {{ BRAND.COMPANY }} account to continue.</p>
+
+      {% if form.non_field_errors %}
+        <div class="rv-auth__alert" role="alert">
+          <svg aria-hidden="true"><use href="#rv-i-alert"></use></svg>
+          <div>{% for error in form.non_field_errors %}{{ error }}{% endfor %}</div>
+        </div>
+      {% endif %}
+
+      <div class="rv-field">
+        <label class="rv-field__label" for="{{ form.identifier.id_for_label }}">{{ form.identifier.label }}</label>
+        {{ form.identifier }}
+        {% if form.identifier.errors %}
+          <div class="rv-field__error">{{ form.identifier.errors.0 }}</div>
+        {% endif %}
+      </div>
+
+      <div class="rv-field">
+        <label class="rv-field__label" for="{{ form.password.id_for_label }}">{{ form.password.label }}</label>
+        <div class="rv-password">
+          {{ form.password }}
+          <button type="button" class="rv-password__toggle" data-rv-password-toggle aria-label="Show password">
+            <svg aria-hidden="true" data-eye-open width="16" height="16"><use href="#rv-i-eye"></use></svg>
+            <svg aria-hidden="true" data-eye-closed width="16" height="16" style="display:none"><use href="#rv-i-eye-off"></use></svg>
+          </button>
+        </div>
+        {% if form.password.errors %}
+          <div class="rv-field__error">{{ form.password.errors.0 }}</div>
+        {% endif %}
+      </div>
+
+      <div class="rv-auth__row">
+        <label class="rv-auth__remember">
+          <input type="checkbox" class="rv-check" name="remember_me" {% if form.remember_me.value %}checked{% endif %}>
+          Keep me signed in
+        </label>
+      </div>
+
+      <button type="submit" class="rv-btn rv-btn--primary" style="width:100%">Sign in</button>
+
+      <div class="rv-auth__meta">
+        Access is provisioned by your administrator. Contact them if you need an account.
+      </div>
+    </form>
+  </section>
+</div>
+{% endblock %}

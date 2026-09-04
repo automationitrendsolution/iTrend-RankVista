@@ -8,7 +8,7 @@ from django.views.decorators.cache import never_cache
 
 from apps.accounts.permissions import login_required
 from apps.common import cache as cache_helpers
-from apps.common import mongo
+from apps.common import mongo, sourcedb
 
 ERROR_COPY = {
     400: ("Bad request", "That request could not be understood. Check the link and try again."),
@@ -29,12 +29,15 @@ def healthz(request: HttpRequest) -> JsonResponse:
     """Liveness probe reporting dependency reachability, never secrets."""
     mongo_ok = mongo.ping()
     cache_ok = cache_helpers.is_available()
+    source_ok = sourcedb.ping()
+    healthy = mongo_ok and source_ok
     payload = {
-        "status": "ok" if mongo_ok else "degraded",
+        "status": "ok" if healthy else "degraded",
         "mongodb": "up" if mongo_ok else "down",
+        "warehouse": "up" if source_ok else "down",
         "cache": "up" if cache_ok else "down",
     }
-    return JsonResponse(payload, status=200 if mongo_ok else 503)
+    return JsonResponse(payload, status=200 if healthy else 503)
 
 
 @login_required

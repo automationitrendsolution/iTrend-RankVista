@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% load rv %}
+
+{% block title %}Users - {{ BRAND.NAME }}{% endblock %}
+
+{% block header %}
+<nav class="rv-breadcrumb" aria-label="Breadcrumb"><span>Administration</span><span aria-hidden="true">/</span><span>Users</span></nav>
+{% endblock %}
+
+{% block content %}
+<div class="rv-page-head">
+  <h1>User management</h1>
+  <div class="rv-counters">
+    <span class="rv-counter"><strong>{{ stats.total }}</strong> <span>Users</span></span>
+    <span class="rv-counter"><strong>{{ stats.active }}</strong> <span>Active</span></span>
+    <span class="rv-counter"><strong>{{ stats.inactive }}</strong> <span>Inactive</span></span>
+    <span class="rv-counter"><strong>{{ stats.admins }}</strong> <span>Admins</span></span>
+  </div>
+</div>
+
+<form class="rv-toolbar" method="get" role="search"
+      hx-get="{% url 'useradmin:user_list' %}" hx-target="#rv-user-results" hx-push-url="true"
+      hx-trigger="submit, input from:#rv-user-search delay:350ms, change from:select">
+  <div class="rv-search">
+    <svg aria-hidden="true"><use href="#rv-i-search"></use></svg>
+    <input type="search" class="rv-input" id="rv-user-search" name="q" value="{{ search }}"
+           placeholder="Search by name, email or username" aria-label="Search users" autocomplete="off">
+  </div>
+
+  <a class="rv-btn rv-btn--primary" href="{% url 'useradmin:user_create' %}">
+    <svg aria-hidden="true"><use href="#rv-i-plus"></use></svg> Create User
+  </a>
+
+  <div class="rv-toolbar__spacer"></div>
+
+  <select class="rv-select" name="role" aria-label="Filter by role" style="width:auto">
+    <option value="">All roles</option>
+    {% for value, label in roles %}
+      <option value="{{ value }}" {% if value == role %}selected{% endif %}>{{ label }}</option>
+    {% endfor %}
+  </select>
+
+  <select class="rv-select" name="status" aria-label="Filter by status" style="width:auto">
+    <option value="">All statuses</option>
+    <option value="active" {% if status == 'active' %}selected{% endif %}>Active</option>
+    <option value="inactive" {% if status == 'inactive' %}selected{% endif %}>Inactive</option>
+  </select>
+
+  <select class="rv-select" name="sort" aria-label="Sort users" style="width:auto">
+    <option value="recent" {% if sort == 'recent' %}selected{% endif %}>Newest first</option>
+    <option value="oldest" {% if sort == 'oldest' %}selected{% endif %}>Oldest first</option>
+    <option value="name" {% if sort == 'name' %}selected{% endif %}>Username A-Z</option>
+    <option value="email" {% if sort == 'email' %}selected{% endif %}>Email A-Z</option>
+    <option value="last_login" {% if sort == 'last_login' %}selected{% endif %}>Last login</option>
+    <option value="role" {% if sort == 'role' %}selected{% endif %}>Role</option>
+  </select>
+
+  <input type="hidden" name="size" value="{{ page_obj.size }}">
+</form>
+
+<div id="rv-user-results">
+  {% include "accounts/partials/user_table.html" %}
+</div>
+{% endblock %}

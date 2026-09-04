@@ -1,0 +1,58 @@
+{% load rv humanize %}
+{% comment %}Rank history drawer for a single keyword, rendered into the modal root.{% endcomment %}
+<div class="rv-modal-backdrop">
+  <div class="rv-modal" role="dialog" aria-modal="true" aria-labelledby="rv-kw-title" style="max-width:620px">
+    <div class="rv-modal__header">
+      <div style="min-width:0">
+        <h2 id="rv-kw-title" class="rv-truncate">{{ keyword }}</h2>
+        <div style="font-size:12px;color:var(--rv-text-muted)">
+          <span class="rv-mono">{{ selected_asin }}</span> &middot; {{ window.start|date:"j M Y" }} to {{ window.end|date:"j M Y" }}
+        </div>
+      </div>
+      <button type="button" class="rv-btn rv-btn--ghost rv-btn--icon rv-btn--sm" data-rv-close-modal aria-label="Close">
+        &times;
+      </button>
+    </div>
+
+    <div class="rv-modal__body">
+      <div class="rv-counters" style="margin-bottom:14px">
+        <span class="rv-counter"><strong>{{ best_rank|rank_display }}</strong> <span>Best</span></span>
+        <span class="rv-counter"><strong>{% if average_rank %}{{ average_rank }}{% else %}-{% endif %}</strong> <span>Average</span></span>
+        <span class="rv-counter"><strong>{{ worst_rank|rank_display }}</strong> <span>Worst</span></span>
+        <span class="rv-counter"><strong>{{ history|length }}</strong> <span>Checks</span></span>
+      </div>
+
+      {% if history %}
+        <div class="rv-scroll" style="max-height:340px;overflow-y:auto">
+          <table class="rv-table">
+            <thead>
+              <tr>
+                <th scope="col">Date</th>
+                <th scope="col" class="rv-num">Rank</th>
+                <th scope="col">Amazon's Choice</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for point in history reversed %}
+                <tr>
+                  <td>{{ point.date|date:"D, j M Y" }}</td>
+                  <td class="rv-num">{{ point.rank|rank_display }}</td>
+                  <td>{% if point.is_amazon_choice %}<span class="rv-badge rv-badge--accent">Held</span>{% else %}<span style="color:var(--rv-text-subtle)">-</span>{% endif %}</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% else %}
+        <div class="rv-empty" style="padding:32px 12px">
+          <h3>No rank history</h3>
+          <p>No checks ran for this keyword in the selected period.</p>
+        </div>
+      {% endif %}
+    </div>
+
+    <div class="rv-modal__footer">
+      <button type="button" class="rv-btn" data-rv-close-modal>Close</button>
+    </div>
+  </div>
+</div>

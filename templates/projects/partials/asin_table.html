@@ -1,0 +1,63 @@
+{% load rv humanize %}
+<div class="rv-table-wrap">
+  {% if page_obj.is_empty %}
+    <div class="rv-empty">
+      <div class="rv-empty__icon"><svg aria-hidden="true" width="22" height="22"><use href="#rv-i-box"></use></svg></div>
+      <h3>No ASINs found</h3>
+      <p>{% if search %}No ASIN in this project matches "{{ search }}".{% else %}This project has no tracked ASINs yet.{% endif %}</p>
+      {% if search %}<a class="rv-btn" href="{% url 'projects:asins' project.project_id %}">Clear search</a>{% endif %}
+    </div>
+  {% else %}
+    <div class="rv-scroll">
+      <table class="rv-table">
+        <thead>
+          <tr>
+            <th scope="col">Product</th>
+            <th scope="col">ASIN</th>
+            <th scope="col">Marketplace</th>
+            <th scope="col" class="rv-num">Tracked keywords</th>
+            <th scope="col" class="rv-num">Price</th>
+            <th scope="col">Status</th>
+            <th scope="col"><span class="rv-visually-hidden">Actions</span></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in page_obj.items %}
+          <tr>
+            <td>
+              <div style="display:flex;align-items:center;gap:10px;min-width:0">
+                {% if row.image_url %}
+                  <img class="rv-thumb" src="{{ row.image_url }}" alt="" loading="lazy" decoding="async">
+                {% else %}
+                  <span class="rv-thumb" style="display:grid;place-items:center;color:var(--rv-text-subtle)">
+                    <svg aria-hidden="true" width="16" height="16"><use href="#rv-i-box"></use></svg>
+                  </span>
+                {% endif %}
+                <div style="min-width:0">
+                  <div class="rv-truncate" style="font-weight:600">{{ row.title|default:"Untitled product" }}</div>
+                  <div style="font-size:11.5px;color:var(--rv-text-subtle)">{{ row.brand|default:"-" }}</div>
+                </div>
+                {% if row.is_primary %}<span class="rv-badge rv-badge--accent">Primary</span>{% endif %}
+              </div>
+            </td>
+            <td class="rv-mono">{{ row.asin }}</td>
+            <td><span class="rv-flag" title="{{ row.marketplace|marketplace_label }}">{{ row.marketplace|flag }}</span></td>
+            <td class="rv-num">{{ row.tracked_keyword_count|default:0|intcomma }}</td>
+            <td class="rv-num">{% if row.price %}{{ row.price|floatformat:2 }}{% else %}-{% endif %}</td>
+            <td>
+              <span class="rv-badge {% if row.status == 'active' %}rv-badge--success{% else %}rv-badge--warning{% endif %}">
+                {{ row.status|title }}
+              </span>
+            </td>
+            <td style="text-align:right;white-space:nowrap">
+              <a class="rv-btn rv-btn--sm" href="{% url 'projects:keywords' project.project_id %}?asin={{ row.asin }}">Keywords</a>
+              <a class="rv-btn rv-btn--sm" href="{% url 'projects:ranks' project.project_id %}?asin={{ row.asin }}">Ranks</a>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% include "partials/pagination.html" with target="#rv-asin-results" %}
+  {% endif %}
+</div>

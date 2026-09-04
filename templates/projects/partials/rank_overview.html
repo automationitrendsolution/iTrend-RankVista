@@ -1,0 +1,106 @@
+{% load rv humanize %}
+{% comment %}KPI strip: visibility, average position, badge count and rank distribution.{% endcomment %}
+<div class="rv-kpis">
+  <div class="rv-kpi">
+    <div class="rv-kpi__label">
+      Visibility
+      <svg aria-hidden="true" width="13" height="13" style="color:var(--rv-text-subtle)"
+           title="Share of tracked keywords ranking in the top 10"><use href="#rv-i-info"></use></svg>
+    </div>
+    <div class="rv-kpi__value">{{ overview.visibility.value|floatformat:0 }}%</div>
+    <div class="rv-kpi__chart">
+      {% if overview.visibility.chart.has_data %}
+        <svg viewBox="0 0 240 64" preserveAspectRatio="none" role="img" aria-label="Visibility trend">
+          <path class="rv-spark__area" d="{{ overview.visibility.chart.area }}"/>
+          <path class="rv-spark__line" d="{{ overview.visibility.chart.path }}"/>
+        </svg>
+        <div class="rv-kpi__axis">
+          <span>{{ overview.visibility.chart.axis_labels.0 }}</span>
+          <span>{{ overview.visibility.chart.axis_labels.1 }}</span>
+          <span>{{ overview.visibility.chart.axis_labels.2 }}</span>
+        </div>
+      {% else %}
+        <div style="color:var(--rv-text-subtle);font-size:12px">Not enough history yet</div>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="rv-kpi">
+    <div class="rv-kpi__label">
+      Average Position
+      <svg aria-hidden="true" width="13" height="13" style="color:var(--rv-text-subtle)"
+           title="Mean organic position across ranked keywords"><use href="#rv-i-info"></use></svg>
+    </div>
+    <div class="rv-kpi__value">
+      {% if overview.average_position.value %}{{ overview.average_position.value|floatformat:1 }}{% else %}-{% endif %}
+    </div>
+    <div class="rv-kpi__chart">
+      {% if overview.average_position.chart.has_data %}
+        <svg viewBox="0 0 240 64" preserveAspectRatio="none" role="img" aria-label="Average position trend">
+          <path class="rv-spark__area" d="{{ overview.average_position.chart.area }}"/>
+          <path class="rv-spark__line" d="{{ overview.average_position.chart.path }}"/>
+        </svg>
+        <div class="rv-kpi__axis">
+          <span>{{ overview.average_position.chart.axis_labels.0 }}</span>
+          <span>{{ overview.average_position.chart.axis_labels.1 }}</span>
+          <span>{{ overview.average_position.chart.axis_labels.2 }}</span>
+        </div>
+      {% else %}
+        <div style="color:var(--rv-text-subtle);font-size:12px">Not enough history yet</div>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="rv-kpi">
+    <div class="rv-kpi__label">
+      Amazon Choice Badges
+      <svg aria-hidden="true" width="13" height="13" style="color:var(--rv-text-subtle)"
+           title="Keywords holding the Amazon's Choice badge"><use href="#rv-i-info"></use></svg>
+    </div>
+    <div class="rv-kpi__value">{{ overview.badges.value|intcomma }}</div>
+    <div class="rv-kpi__chart">
+      {% if overview.badges.chart.has_data %}
+        <svg viewBox="0 0 240 64" preserveAspectRatio="none" role="img" aria-label="Badge count trend">
+          <path class="rv-spark__area" d="{{ overview.badges.chart.area }}"/>
+          <path class="rv-spark__line" d="{{ overview.badges.chart.path }}"/>
+        </svg>
+        <div class="rv-kpi__axis">
+          <span>{{ overview.badges.chart.axis_labels.0 }}</span>
+          <span>{{ overview.badges.chart.axis_labels.1 }}</span>
+          <span>{{ overview.badges.chart.axis_labels.2 }}</span>
+        </div>
+      {% else %}
+        <div style="color:var(--rv-text-subtle);font-size:12px">No badges in this period</div>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="rv-kpi">
+    <div class="rv-kpi__label">
+      Distribution
+      <svg aria-hidden="true" width="13" height="13" style="color:var(--rv-text-subtle)"
+           title="Keywords grouped by rank band, per day"><use href="#rv-i-info"></use></svg>
+    </div>
+    <div class="rv-dist">
+      <div class="rv-dist__chart" role="img" aria-label="Rank distribution over time">
+        {% for column in overview.distribution.columns %}
+          <div class="rv-dist__col" title="{{ column.label }}: {{ column.total }} ranked">
+            {% for segment in column.segments %}
+              <div class="rv-dist__seg rv-dist__seg--{{ segment.tone }}"
+                   style="height:{{ segment.height }}%"></div>
+            {% endfor %}
+          </div>
+        {% endfor %}
+      </div>
+      <div class="rv-dist__legend">
+        {% for entry in overview.distribution.legend %}
+          <div class="rv-dist__row">
+            <span class="rv-dist__dot rv-dist__seg--{{ entry.tone }}"></span>
+            <span>{{ entry.label }}</span>
+            <span class="rv-dist__count">{{ entry.count|intcomma }}</span>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</div>

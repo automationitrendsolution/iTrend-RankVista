@@ -1,0 +1,27 @@
+# Normalise line endings so Windows checkouts do not break Linux containers.
+* text=auto eol=lf
+
+# Shell scripts and Docker files must stay LF or the container entrypoint fails.
+*.sh text eol=lf
+Dockerfile text eol=lf
+docker/** text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+
+# Windows-only helpers keep CRLF.
+*.bat text eol=crlf
+*.cmd text eol=crlf
+*.ps1 text eol=crlf
+
+# Binary assets are never diffed or converted.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.woff binary
+*.woff2 binary
+*.pdf binary
+
+# Lockfiles are generated; keep diffs collapsed in review tools.
+uv.lock linguist-generated=true -diff

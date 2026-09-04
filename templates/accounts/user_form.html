@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+
+{% block title %}{% if mode == 'edit' %}Edit user{% else %}Create user{% endif %} - {{ BRAND.NAME }}{% endblock %}
+
+{% block header %}
+<nav class="rv-breadcrumb" aria-label="Breadcrumb"><a href="{% url 'useradmin:user_list' %}">Users</a><span aria-hidden="true">/</span><span>{% if mode == 'edit' %}Edit user{% else %}New user{% endif %}</span></nav>
+{% endblock %}
+
+{% block content %}
+<div class="rv-page-head">
+  <div style="display:flex;align-items:center;gap:10px">
+    <a class="rv-btn rv-btn--ghost rv-btn--icon" href="{% url 'useradmin:user_list' %}" aria-label="Back to users">
+      <svg aria-hidden="true"><use href="#rv-i-back"></use></svg>
+    </a>
+    <h1>{% if mode == 'edit' %}Edit user{% else %}Create user{% endif %}</h1>
+  </div>
+</div>
+
+<div class="rv-card" style="max-width:560px">
+  <form method="post" novalidate data-rv-loading>
+    {% csrf_token %}
+    <div class="rv-card__body">
+      {% if form.non_field_errors %}
+        <div class="rv-auth__alert" role="alert">
+          <svg aria-hidden="true"><use href="#rv-i-alert"></use></svg>
+          <div>{{ form.non_field_errors.0 }}</div>
+        </div>
+      {% endif %}
+
+      {% for field in form %}
+        <div class="rv-field">
+          {% if field.name == 'is_active' %}
+            <label class="rv-auth__remember" style="font-size:13px">
+              {{ field }} Account is active
+            </label>
+          {% else %}
+            <label class="rv-field__label" for="{{ field.id_for_label }}">
+              {{ field.label }}{% if field.field.required %} <span style="color:var(--rv-danger)">*</span>{% endif %}
+            </label>
+            {{ field }}
+          {% endif %}
+          {% if field.errors %}<div class="rv-field__error">{{ field.errors.0 }}</div>{% endif %}
+          {% if field.name == 'password1' %}
+            <div class="rv-field__hint">At least 10 characters, not entirely numeric, and not a common password.</div>
+          {% endif %}
+        </div>
+      {% endfor %}
+    </div>
+
+    <div class="rv-modal__footer" style="border-radius:0 0 var(--rv-radius-lg) var(--rv-radius-lg)">
+      <a class="rv-btn" href="{% url 'useradmin:user_list' %}">Cancel</a>
+      <button type="submit" class="rv-btn rv-btn--primary">
+        {% if mode == 'edit' %}Save changes{% else %}Create user{% endif %}
+      </button>
+    </div>
+  </form>
+</div>
+{% endblock %}

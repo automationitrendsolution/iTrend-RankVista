@@ -1,0 +1,89 @@
+{% load rv %}
+<div class="rv-table-wrap">
+  {% if page_obj.is_empty %}
+    <div class="rv-empty">
+      <div class="rv-empty__icon"><svg aria-hidden="true" width="22" height="22"><use href="#rv-i-users"></use></svg></div>
+      <h3>No users found</h3>
+      <p>{% if search %}No user matches "{{ search }}".{% else %}Create the first platform user to get started.{% endif %}</p>
+      <a class="rv-btn rv-btn--primary" href="{% url 'useradmin:user_create' %}">Create User</a>
+    </div>
+  {% else %}
+    <div class="rv-scroll">
+      <table class="rv-table">
+        <thead>
+          <tr>
+            <th scope="col">User</th>
+            <th scope="col">Role</th>
+            <th scope="col">Status</th>
+            <th scope="col">Last login</th>
+            <th scope="col">Joined</th>
+            <th scope="col"><span class="rv-visually-hidden">Actions</span></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in page_obj.items %}
+          <tr>
+            <td>
+              <div style="display:flex;align-items:center;gap:10px;min-width:0">
+                <span class="rv-avatar">{{ row.initials }}</span>
+                <div style="min-width:0">
+                  <div style="font-weight:600">{{ row.display_name }}</div>
+                  <div style="font-size:11.5px;color:var(--rv-text-subtle)">{{ row.email }}</div>
+                </div>
+              </div>
+            </td>
+            <td>
+              <span class="rv-badge {% if row.is_super_admin %}rv-badge--accent{% elif row.is_admin %}rv-badge--warning{% endif %}">
+                {{ row.get_role_display }}
+              </span>
+            </td>
+            <td>
+              <span class="rv-badge {% if row.is_active %}rv-badge--success{% else %}rv-badge--danger{% endif %}">
+                {% if row.is_active %}Active{% else %}Inactive{% endif %}
+              </span>
+            </td>
+            <td>{% if row.last_login %}{{ row.last_login|date:"j M Y, H:i" }}{% else %}<span style="color:var(--rv-text-subtle)">Never</span>{% endif %}</td>
+            <td>{{ row.date_joined|date:"j M Y" }}</td>
+            <td style="text-align:right">
+              {% if row.pk != request.user.pk %}
+                <div class="rv-dropdown">
+                  <button type="button" class="rv-btn rv-btn--ghost rv-btn--icon rv-btn--sm" data-rv-dropdown
+                          aria-haspopup="true" aria-expanded="false" aria-label="Actions for {{ row.email }}">
+                    <svg aria-hidden="true" width="15" height="15"><use href="#rv-i-more"></use></svg>
+                  </button>
+                  <div class="rv-dropdown__menu">
+                    <a class="rv-dropdown__item" href="{% url 'useradmin:user_edit' row.pk %}">
+                      <svg aria-hidden="true" width="15" height="15"><use href="#rv-i-edit"></use></svg> Edit user
+                    </a>
+                    <a class="rv-dropdown__item" href="{% url 'useradmin:user_password' row.pk %}">
+                      <svg aria-hidden="true" width="15" height="15"><use href="#rv-i-key"></use></svg> Reset password
+                    </a>
+                    <form method="post" action="{% url 'useradmin:user_toggle' row.pk %}">
+                      {% csrf_token %}
+                      <button type="submit" class="rv-dropdown__item">
+                        <svg aria-hidden="true" width="15" height="15"><use href="#rv-i-power"></use></svg>
+                        {% if row.is_active %}Deactivate{% else %}Activate{% endif %}
+                      </button>
+                    </form>
+                    <div class="rv-dropdown__divider"></div>
+                    <form method="post" action="{% url 'useradmin:user_delete' row.pk %}"
+                          onsubmit="return confirm('Delete {{ row.email|escapejs }}? This cannot be undone.')">
+                      {% csrf_token %}
+                      <button type="submit" class="rv-dropdown__item rv-dropdown__item--danger">
+                        <svg aria-hidden="true" width="15" height="15"><use href="#rv-i-trash"></use></svg> Delete user
+                      </button>
+                    </form>
+                  </div>
+                </div>
+              {% else %}
+                <span class="rv-badge">You</span>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% include "partials/pagination.html" with target="#rv-user-results" %}
+  {% endif %}
+</div>

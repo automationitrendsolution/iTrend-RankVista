@@ -1,0 +1,56 @@
+{% load rv humanize %}
+{% comment %}Project detail header and primary tab bar, shared by every tab.{% endcomment %}
+<div class="rv-page-head" style="margin-bottom:12px">
+  <div style="display:flex;align-items:center;gap:10px;min-width:0">
+    <a class="rv-btn rv-btn--ghost rv-btn--icon" href="{% url 'projects:list' %}" aria-label="Back to projects">
+      <svg aria-hidden="true"><use href="#rv-i-back"></use></svg>
+    </a>
+    <span class="rv-flag rv-flag--lg" title="{{ market.label }}">{{ market.code }}</span>
+    <h1 class="rv-truncate" style="max-width:44vw">{{ project.name }}</h1>
+  </div>
+
+  <div style="display:flex;align-items:center;gap:8px">
+    <a class="rv-btn" href="{% url 'projects:edit' project.project_id %}">
+      <svg aria-hidden="true"><use href="#rv-i-edit"></use></svg> Edit Project
+    </a>
+    <div class="rv-dropdown">
+      <button type="button" class="rv-btn rv-btn--icon" data-rv-dropdown aria-haspopup="true"
+              aria-expanded="false" aria-label="Project information">
+        <svg aria-hidden="true"><use href="#rv-i-info"></use></svg>
+      </button>
+      <div class="rv-dropdown__menu" style="min-width:250px;padding:12px">
+        <div style="font-size:12px;color:var(--rv-text-muted);display:grid;gap:7px">
+          <div><strong style="color:var(--rv-text)">Project ID</strong><br>{{ project.project_id }}</div>
+          <div><strong style="color:var(--rv-text)">Primary ASIN</strong><br><span class="rv-mono">{{ project.primary_asin }}</span></div>
+          <div><strong style="color:var(--rv-text)">Marketplace</strong><br>{{ market.label }}{% if market.domain %} ({{ market.domain }}){% endif %}</div>
+          <div><strong style="color:var(--rv-text)">Created</strong><br>{{ project.created_at|date:"j M Y" }}</div>
+          {% if project.tags %}
+            <div><strong style="color:var(--rv-text)">Tags</strong><br>{{ project.tags|join:", " }}</div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+    <a class="rv-btn rv-btn--icon" href="{% url 'projects:edit' project.project_id %}" aria-label="Project settings">
+      <svg aria-hidden="true"><use href="#rv-i-settings"></use></svg>
+    </a>
+  </div>
+</div>
+
+<nav class="rv-tabs" aria-label="Project sections">
+  <a class="rv-tab {% if tab == 'asins' %}is-active{% endif %}"
+     href="{% url 'projects:asins' project.project_id %}?asin={{ selected_asin }}"
+     {% if tab == 'asins' %}aria-current="page"{% endif %}>
+    ASINs <span class="rv-tab__count">{{ asin_count|intcomma }}</span>
+  </a>
+  <a class="rv-tab {% if tab == 'keywords' %}is-active{% endif %}"
+     href="{% url 'projects:keywords' project.project_id %}?asin={{ selected_asin }}"
+     {% if tab == 'keywords' %}aria-current="page"{% endif %}>
+    Keywords <span class="rv-tab__count">{{ keyword_count|intcomma }}</span>
+  </a>
+  <a class="rv-tab {% if tab == 'ranks' %}is-active{% endif %}"
+     href="{% url 'projects:ranks' project.project_id %}?asin={{ selected_asin }}"
+     {% if tab == 'ranks' %}aria-current="page"{% endif %}>Ranks</a>
+  <a class="rv-tab {% if tab == 'trends' %}is-active{% endif %}"
+     href="{% url 'projects:trends' project.project_id %}?asin={{ selected_asin }}"
+     {% if tab == 'trends' %}aria-current="page"{% endif %}>Trends</a>
+</nav>

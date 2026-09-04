@@ -24,7 +24,8 @@ def qs(context, **overrides) -> str:
 
 @register.filter
 def flag(code: str | None) -> str:
-    return marketplace_meta(code)["flag"]
+    """Marketplace code for the chip. Emoji flags fall back to letters on Windows."""
+    return marketplace_meta(code)["code"]
 
 
 @register.filter

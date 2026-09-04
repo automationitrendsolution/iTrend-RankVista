@@ -1,0 +1,31 @@
+{% load rv humanize %}
+<article class="rv-project-card">
+  <div class="rv-project-card__menu">
+    {% include "projects/partials/project_menu.html" with project=project %}
+  </div>
+
+  <a class="rv-project-card__link" href="{% url 'projects:detail' project.project_id %}"
+     aria-label="Open {{ project.name }}"></a>
+
+  <div class="rv-project-card__media">
+    {% if project.image_url %}
+      <img src="{{ project.image_url }}" alt="" loading="lazy" decoding="async">
+    {% else %}
+      <svg aria-hidden="true" width="40" height="40" style="color:var(--rv-border-strong)">
+        <use href="#rv-i-box"></use>
+      </svg>
+    {% endif %}
+  </div>
+
+  <div class="rv-project-card__body">
+    <h3 class="rv-project-card__title">{{ project.name }}</h3>
+    <div class="rv-project-card__asin">
+      <span class="rv-flag" title="{{ project.marketplace|marketplace_label }}">{{ project.marketplace|flag }}</span>
+      {{ project.primary_asin }}
+    </div>
+    <div class="rv-project-card__stats">
+      <span>{{ project.asin_count|intcomma }} ASIN{{ project.asin_count|pluralize }}</span>
+      <span>{{ project.keyword_count|intcomma }} Keyword{{ project.keyword_count|pluralize }}</span>
+    </div>
+  </div>
+</article>

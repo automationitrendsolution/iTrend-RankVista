@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+
+{% block title %}Data unavailable - {{ BRAND.NAME }}{% endblock %}
+
+{% block content %}
+<div class="rv-table-wrap">
+  <div class="rv-empty">
+    <div class="rv-empty__icon" style="color:var(--rv-danger)">
+      <svg aria-hidden="true" width="22" height="22"><use href="#rv-i-alert"></use></svg>
+    </div>
+    <h3>We could not load this data</h3>
+    <p>{{ message }} The database may be temporarily unreachable. Your data has not been changed.</p>
+    <div style="display:flex;gap:9px;margin-top:6px">
+      <a class="rv-btn rv-btn--primary" href="{{ retry_url }}">
+        <svg aria-hidden="true"><use href="#rv-i-refresh"></use></svg> Retry
+      </a>
+      <a class="rv-btn" href="{% url 'projects:list' %}">Back to projects</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

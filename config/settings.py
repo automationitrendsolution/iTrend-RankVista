@@ -6,6 +6,7 @@ from __future__ import annotations
 import os
 from pathlib import Path
 
+from django_mongodb_backend import parse_uri
 from dotenv import load_dotenv
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -54,8 +55,8 @@ CSRF_TRUSTED_ORIGINS = env_list("CSRF_TRUSTED_ORIGINS")
 ENABLE_DJANGO_ADMIN = env_bool("ENABLE_DJANGO_ADMIN", False)
 
 INSTALLED_APPS = [
-    "django.contrib.auth",
-    "django.contrib.contenttypes",
+    "config.mongo_apps.MongoAuthConfig",
+    "config.mongo_apps.MongoContentTypesConfig",
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
@@ -73,7 +74,7 @@ INSTALLED_APPS = [
 ]
 
 if ENABLE_DJANGO_ADMIN:
-    INSTALLED_APPS.insert(0, "django.contrib.admin")
+    INSTALLED_APPS.insert(0, "config.mongo_apps.MongoAdminConfig")
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
@@ -108,39 +109,52 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "config.wsgi.application"
 
-# Relational DB -> auth, users, sessions, audit trail (Django ORM).
-# MongoDB -> projects, ASINs, keywords, ranking history (repositories).
-_db_engine = env("DJANGO_DB_ENGINE", "django.db.backends.sqlite3")
-_db_name = env("DJANGO_DB_NAME", "db.sqlite3")
+# MongoDB is the only datastore: Django ORM (auth, sessions, audit) runs on the
+# official django-mongodb-backend; analytics collections use the repositories.
+MONGODB_URI = env("MONGODB_URI", "mongodb://127.0.0.1:27017/")
+MONGODB_DATABASE = env("MONGODB_DATABASE", "rankvista")
 
 DATABASES = {
-    "default": {
-        "ENGINE": _db_engine,
-        "NAME": str(BASE_DIR / _db_name) if _db_engine.endswith("sqlite3") else _db_name,
-    }
+    "default": parse_uri(MONGODB_URI, db_name=MONGODB_DATABASE),
 }
-if not _db_engine.endswith("sqlite3"):
-    DATABASES["default"].update(
-        {
-            "USER": env("DJANGO_DB_USER"),
-            "PASSWORD": env("DJANGO_DB_PASSWORD"),
-            "HOST": env("DJANGO_DB_HOST"),
-            "PORT": env("DJANGO_DB_PORT"),
-            "CONN_MAX_AGE": 60,
-        }
-    )
 
-DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+DEFAULT_AUTO_FIELD = "django_mongodb_backend.fields.ObjectIdAutoField"
+
+# Django contrib apps ship AutoField migrations; MongoDB needs ObjectId variants.
+MIGRATION_MODULES = {
+    "admin": "mongo_migrations.admin",
+    "auth": "mongo_migrations.auth",
+    "contenttypes": "mongo_migrations.contenttypes",
+}
 
 MONGODB = {
-    "URI": env("MONGODB_URI", "mongodb://127.0.0.1:27017/"),
-    "DATABASE": env("MONGODB_DATABASE", "rankvista"),
+    "URI": MONGODB_URI,
+    "DATABASE": MONGODB_DATABASE,
     "TIMEOUT_MS": env_int("MONGODB_TIMEOUT_MS", 5000),
     "COLLECTIONS": {
         "projects": env("MONGODB_COLLECTION_PROJECTS", "projects"),
         "asins": env("MONGODB_COLLECTION_ASINS", "asins"),
         "keywords": env("MONGODB_COLLECTION_KEYWORDS", "keywords"),
         "rankings": env("MONGODB_COLLECTION_RANKINGS", "rankings"),
+    },
+}
+
+# Read-only MySQL warehouse holding the live rank history.
+SOURCE_DB = {
+    "ENABLED": env_bool("SOURCE_DB_ENABLED", False),
+    "HOST": env("SOURCE_DB_HOST"),
+    "PORT": env_int("SOURCE_DB_PORT", 3306),
+    "USER": env("SOURCE_DB_USER"),
+    "PASSWORD": env("SOURCE_DB_PASSWORD"),
+    "NAME": env("SOURCE_DB_NAME"),
+    "TIMEOUT": env_int("SOURCE_DB_TIMEOUT", 15),
+    "READ_TIMEOUT": env_int("SOURCE_DB_READ_TIMEOUT", 60),
+    "TABLES": {
+        "ranks": env("SOURCE_DB_RANK_TABLE", "datarova_rank_history"),
+        "asins": env("SOURCE_DB_ASIN_TABLE", "datarova_asin_registry"),
+        "keywords": env("SOURCE_DB_KEYWORD_TABLE", "datarova_asin_keyword_summary"),
+        "categories": env("SOURCE_DB_CATEGORY_TABLE", "datarova_asin_category"),
+        "sync_log": env("SOURCE_DB_SYNC_TABLE", "datarova_sync_log"),
     },
 }
 
@@ -230,6 +244,7 @@ SECURE_CROSS_ORIGIN_OPENER_POLICY = "same-origin"
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 X_FRAME_OPTIONS = "DENY"
 
+SESSION_ENGINE = "django.contrib.sessions.backends.db"
 MESSAGE_STORAGE = "django.contrib.messages.storage.session.SessionStorage"
 
 # Logging: never emit credentials, tokens or cookies.

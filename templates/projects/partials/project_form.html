@@ -1,0 +1,37 @@
+{% comment %}Create/edit project rendered as a modal for HTMX requests.{% endcomment %}
+<div class="rv-modal-backdrop">
+  <div class="rv-modal" role="dialog" aria-modal="true" aria-labelledby="rv-project-form-title">
+    <form method="post" novalidate data-rv-loading
+          action="{% if mode == 'edit' %}{% url 'projects:edit' project.project_id %}{% else %}{% url 'projects:create' %}{% endif %}">
+      {% csrf_token %}
+      <div class="rv-modal__header">
+        <h2 id="rv-project-form-title">{% if mode == 'edit' %}Edit project{% else %}Create project{% endif %}</h2>
+        <button type="button" class="rv-btn rv-btn--ghost rv-btn--icon rv-btn--sm" data-rv-close-modal
+                aria-label="Close">&times;</button>
+      </div>
+
+      <div class="rv-modal__body">
+        {% if form.non_field_errors %}
+          <div class="rv-auth__alert" role="alert">
+            <svg aria-hidden="true"><use href="#rv-i-alert"></use></svg>
+            <div>{{ form.non_field_errors.0 }}</div>
+          </div>
+        {% endif %}
+        {% for field in form %}
+          <div class="rv-field">
+            <label class="rv-field__label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+            {{ field }}
+            {% if field.errors %}<div class="rv-field__error">{{ field.errors.0 }}</div>{% endif %}
+          </div>
+        {% endfor %}
+      </div>
+
+      <div class="rv-modal__footer">
+        <button type="button" class="rv-btn" data-rv-close-modal>Cancel</button>
+        <button type="submit" class="rv-btn rv-btn--primary">
+          {% if mode == 'edit' %}Save changes{% else %}Create project{% endif %}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

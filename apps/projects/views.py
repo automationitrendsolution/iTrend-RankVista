@@ -24,7 +24,7 @@ from apps.common.constants import (
 )
 from apps.common.dates import format_window_label, resolve_window
 from apps.common.heatmap import legend as heatmap_legend
-from apps.common.mongo import MongoUnavailable
+from apps.common.sourcedb import SourceUnavailable
 from apps.common.pagination import parse_page_request
 from apps.keywords import repositories as keyword_repo
 from apps.projects import repositories as repo
@@ -70,7 +70,7 @@ def project_list(request: HttpRequest) -> HttpResponse:
             query=query, sort=sort, offset=page_req.offset, limit=page_req.limit
         )
         counters = usage_counters()
-    except MongoUnavailable as exc:
+    except SourceUnavailable as exc:
         return _error_page(request, str(exc))
 
     context = {
@@ -95,7 +95,7 @@ def project_create(request: HttpRequest) -> HttpResponse:
     if request.method == "POST" and form.is_valid():
         try:
             project = services.create_project(data=form.to_document(), request=request)
-        except MongoUnavailable as exc:
+        except SourceUnavailable as exc:
             return _error_page(request, str(exc))
         messages.success(request, f"Project '{project['name']}' created.")
         return redirect(reverse("projects:detail", args=[project["project_id"]]))
@@ -122,7 +122,7 @@ def project_edit(request: HttpRequest, project_id: int) -> HttpResponse:
             services.update_project(
                 project_id=project_id, data=form.to_document(), request=request
             )
-        except MongoUnavailable as exc:
+        except SourceUnavailable as exc:
             return _error_page(request, str(exc))
         messages.success(request, "Project updated.")
         return redirect(reverse("projects:detail", args=[project_id]))
@@ -139,7 +139,7 @@ def project_archive(request: HttpRequest, project_id: int) -> HttpResponse:
     require_project(project_id)
     try:
         services.archive_project(project_id=project_id, request=request)
-    except MongoUnavailable as exc:
+    except SourceUnavailable as exc:
         return _error_page(request, str(exc))
     messages.success(request, "Project archived.")
     return redirect(reverse("projects:list"))
@@ -193,7 +193,7 @@ def project_asins(request: HttpRequest, project_id: int) -> HttpResponse:
         rows, total = asin_repo.list_asins(
             query=query, sort=sort, offset=page_req.offset, limit=page_req.limit
         )
-    except MongoUnavailable as exc:
+    except SourceUnavailable as exc:
         return _error_page(request, str(exc))
 
     context.update(
@@ -239,7 +239,7 @@ def project_keywords(request: HttpRequest, project_id: int) -> HttpResponse:
     try:
         page_obj, rows, sort = _keyword_page(request, project_id, asin)
         summary = keyword_repo.metric_summary(project_id, asin)
-    except MongoUnavailable as exc:
+    except SourceUnavailable as exc:
         return _error_page(request, str(exc))
 
     context.update(
@@ -284,7 +284,7 @@ def project_ranks(request: HttpRequest, project_id: int) -> HttpResponse:
             project_id=project_id, asin=asin, keywords=keywords, window=window
         )
         overview = analytics.build_overview(project_id=project_id, asin=asin, window=window)
-    except MongoUnavailable as exc:
+    except SourceUnavailable as exc:
         return _error_page(request, str(exc))
 
     context.update(
@@ -314,7 +314,7 @@ def project_trends(request: HttpRequest, project_id: int) -> HttpResponse:
 
     try:
         overview = analytics.build_overview(project_id=project_id, asin=asin, window=window)
-    except MongoUnavailable as exc:
+    except SourceUnavailable as exc:
         return _error_page(request, str(exc))
 
     series = overview["series"]
@@ -372,7 +372,7 @@ def keyword_detail(request: HttpRequest, project_id: int, keyword: str) -> HttpR
         history = rank_repo.keyword_history(
             project_id=project_id, asin=asin, keyword_lower=keyword.lower(), window=window
         )
-    except MongoUnavailable as exc:
+    except SourceUnavailable as exc:
         return _error_page(request, str(exc))
 
     ranks = [point["rank"] for point in history if isinstance(point.get("rank"), int) and point["rank"] > 0]

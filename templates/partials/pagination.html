@@ -1,0 +1,53 @@
+{% load rv %}
+{% comment %}Server-side pagination. `target` is the HTMX swap target when provided.{% endcomment %}
+{% if page_obj and page_obj.total %}
+<nav class="rv-pagination" aria-label="Pagination">
+  <div>{{ page_obj.start_index }}-{{ page_obj.end_index }} of {{ page_obj.total }}</div>
+
+  <div class="rv-pagination__pages">
+    {% if page_obj.has_previous %}
+      <a href="{% qs page=1 %}" aria-label="First page"{% if target %} hx-get="{% qs page=1 %}" hx-target="{{ target }}" hx-push-url="true"{% endif %}>
+        <svg aria-hidden="true" width="14" height="14"><use href="#rv-i-first"></use></svg>
+      </a>
+      <a href="{% qs page=page_obj.previous_number %}" aria-label="Previous page"{% if target %} hx-get="{% qs page=page_obj.previous_number %}" hx-target="{{ target }}" hx-push-url="true"{% endif %}>
+        <svg aria-hidden="true" width="14" height="14"><use href="#rv-i-chevron-left"></use></svg>
+      </a>
+    {% else %}
+      <span class="is-disabled"><svg aria-hidden="true" width="14" height="14"><use href="#rv-i-first"></use></svg></span>
+      <span class="is-disabled"><svg aria-hidden="true" width="14" height="14"><use href="#rv-i-chevron-left"></use></svg></span>
+    {% endif %}
+
+    {% for number in page_obj.page_range %}
+      {% if not number %}
+        <span aria-hidden="true">&hellip;</span>
+      {% elif number == page_obj.number %}
+        <span class="is-active" aria-current="page">{{ number }}</span>
+      {% else %}
+        <a href="{% qs page=number %}"{% if target %} hx-get="{% qs page=number %}" hx-target="{{ target }}" hx-push-url="true"{% endif %}>{{ number }}</a>
+      {% endif %}
+    {% endfor %}
+
+    {% if page_obj.has_next %}
+      <a href="{% qs page=page_obj.next_number %}" aria-label="Next page"{% if target %} hx-get="{% qs page=page_obj.next_number %}" hx-target="{{ target }}" hx-push-url="true"{% endif %}>
+        <svg aria-hidden="true" width="14" height="14"><use href="#rv-i-chevron-right"></use></svg>
+      </a>
+      <a href="{% qs page=page_obj.num_pages %}" aria-label="Last page"{% if target %} hx-get="{% qs page=page_obj.num_pages %}" hx-target="{{ target }}" hx-push-url="true"{% endif %}>
+        <svg aria-hidden="true" width="14" height="14"><use href="#rv-i-last"></use></svg>
+      </a>
+    {% else %}
+      <span class="is-disabled"><svg aria-hidden="true" width="14" height="14"><use href="#rv-i-chevron-right"></use></svg></span>
+      <span class="is-disabled"><svg aria-hidden="true" width="14" height="14"><use href="#rv-i-last"></use></svg></span>
+    {% endif %}
+  </div>
+
+  <div class="rv-pagination__size">
+    <label for="rv-page-size">Rows per page</label>
+    <select class="rv-select" id="rv-page-size"
+            onchange="window.location.href=this.options[this.selectedIndex].dataset.url">
+      {% for choice in page_obj.size_choices %}
+        <option value="{{ choice }}" data-url="{% qs size=choice page=1 %}" {% if choice == page_obj.size %}selected{% endif %}>{{ choice }}</option>
+      {% endfor %}
+    </select>
+  </div>
+</nav>
+{% endif %}

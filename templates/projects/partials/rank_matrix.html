@@ -1,0 +1,94 @@
+{% load rv humanize %}
+{% comment %}Wide historical rank matrix: sticky keyword and metric columns, scrolling dates.{% endcomment %}
+<div class="rv-table-wrap">
+  {% if not rows %}
+    <div class="rv-empty">
+      <div class="rv-empty__icon"><svg aria-hidden="true" width="22" height="22"><use href="#rv-i-empty"></use></svg></div>
+      <h3>No keywords match</h3>
+      <p>
+        {% if has_filters %}
+          No keyword for this ASIN matches the current filters. Widen the rank range or clear the search.
+        {% else %}
+          This ASIN has no tracked keywords in the selected period.
+        {% endif %}
+      </p>
+      {% if has_filters %}
+        <a class="rv-btn" href="{% url 'projects:ranks' project.project_id %}?asin={{ selected_asin }}">Clear filters</a>
+      {% endif %}
+    </div>
+  {% else %}
+    <div class="rv-scroll" data-rv-matrix-scroll tabindex="0" role="region" aria-label="Keyword ranking matrix">
+      <table class="rv-matrix">
+        <thead>
+          <tr>
+            <th scope="col" class="rv-sticky rv-sticky--check">
+              <input type="checkbox" class="rv-check" data-rv-select-all aria-label="Select all keywords">
+            </th>
+            <th scope="col" class="rv-sticky rv-sticky--keyword" style="text-align:left;padding-left:10px">
+              Keyword ({{ page_obj.total|intcomma }})
+            </th>
+            <th scope="col" class="rv-sticky rv-sticky--m1" title="Estimated keyword sales, last 4 weeks">
+              KW Sales <span class="rv-badge" style="font-size:9px">L4W</span>
+            </th>
+            <th scope="col" class="rv-sticky rv-sticky--m2" title="Keyword sales trend, last 4 weeks">
+              Sales Trend <span class="rv-badge" style="font-size:9px">L4W</span>
+            </th>
+            <th scope="col" class="rv-sticky rv-sticky--m3" title="Keyword conversion rate, last 4 weeks">
+              KW Conv. <span class="rv-badge" style="font-size:9px">L4W</span>
+            </th>
+            {% for column in columns %}
+              <th scope="col" class="rv-matrix__date" title="{{ column.iso }}">{{ column.label }}</th>
+            {% endfor %}
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in rows %}
+          <tr>
+            <td class="rv-sticky rv-sticky--check">
+              <input type="checkbox" class="rv-check" data-rv-select-row value="{{ row.keyword_lower }}"
+                     aria-label="Select {{ row.keyword }}">
+            </td>
+            <th scope="row" class="rv-sticky rv-sticky--keyword" style="font-weight:500">
+              <div class="rv-matrix__keyword">
+                <span title="{{ row.keyword }}">{{ row.keyword }}</span>
+                <a class="rv-btn rv-btn--ghost rv-btn--icon rv-btn--sm"
+                   href="{% url 'projects:keyword_detail' project.project_id row.keyword %}?asin={{ selected_asin }}&range={{ window.preset }}&interval={{ window.interval }}"
+                   hx-get="{% url 'projects:keyword_detail' project.project_id row.keyword %}?asin={{ selected_asin }}&range={{ window.preset }}&interval={{ window.interval }}"
+                   hx-target="#rv-modal-root" aria-label="Rank history for {{ row.keyword }}">
+                  <svg aria-hidden="true" width="14" height="14"><use href="#rv-i-more"></use></svg>
+                </a>
+              </div>
+            </th>
+            <td class="rv-sticky rv-sticky--m1"><span class="rv-matrix__metric">{{ row.kw_sales|intcomma }}</span></td>
+            <td class="rv-sticky rv-sticky--m2">
+              <span class="rv-matrix__metric rv-trend--{{ row.trend_direction }}">{{ row.sales_trend_pct|floatformat:1 }}%</span>
+            </td>
+            <td class="rv-sticky rv-sticky--m3"><span class="rv-matrix__metric">{{ row.conversion_pct|floatformat:1 }}%</span></td>
+            {% for cell in row.cells %}
+              <td class="rv-matrix__date"><span class="{{ cell.css }}" title="{{ cell.title }}">{{ cell.label }}</span></td>
+            {% endfor %}
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    {% include "partials/pagination.html" with target="#rv-rank-results" %}
+
+    <div class="rv-legend">
+      <div class="rv-legend__scale">
+        <span>Ranks</span>
+        <span>1</span>
+        <span class="rv-legend__bar" aria-hidden="true"></span>
+        <span>30+</span>
+      </div>
+      {% for item in legend %}
+        <span class="rv-legend__item">
+          <span class="rv-legend__swatch rv-legend__swatch--{{ item.tone }}" title="{{ item.hint }}"
+                aria-hidden="true">{% if item.tone == 'unranked' %}-{% elif item.tone == 'checking' %}&hellip;{% endif %}</span>
+          {{ item.label }}
+        </span>
+      {% endfor %}
+    </div>
+  {% endif %}
+</div>

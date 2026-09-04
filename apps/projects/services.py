@@ -13,14 +13,15 @@ from apps.common.constants import CACHE_KEY_PROJECT_SUMMARY, CACHE_KEY_USAGE_COU
 from apps.projects import repositories as repo
 
 
-def _invalidate(project_id: int | None = None) -> None:
+def _invalidate(project_id: str | int | None = None) -> None:
     cache_delete(CACHE_KEY_USAGE_COUNTS)
+    repo.invalidate_roster()
     if project_id is not None:
         cache_delete(CACHE_KEY_PROJECT_SUMMARY.format(project_id=project_id))
 
 
 def create_project(*, data: dict[str, Any], request: HttpRequest) -> dict[str, Any]:
-    document = repo.create_project({**data, "owner_id": request.user.pk})
+    document = repo.create_project({**data, "owner_id": str(request.user.pk)})
     _invalidate(document["project_id"])
     record(
         AuditAction.PROJECT_CREATED,

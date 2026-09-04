@@ -1,0 +1,26 @@
+{% comment %}Overflow menu for a project card or row.{% endcomment %}
+<div class="rv-dropdown" style="position:relative;z-index:3">
+  <button type="button" class="rv-btn rv-btn--ghost rv-btn--icon rv-btn--sm" data-rv-dropdown
+          aria-haspopup="true" aria-expanded="false" aria-label="Project actions for {{ project.name }}">
+    <svg aria-hidden="true" width="15" height="15"><use href="#rv-i-more"></use></svg>
+  </button>
+  <div class="rv-dropdown__menu">
+    <a class="rv-dropdown__item" href="{% url 'projects:asins' project.project_id %}">
+      <svg aria-hidden="true" width="15" height="15"><use href="#rv-i-box"></use></svg> Open ASINs
+    </a>
+    <a class="rv-dropdown__item" href="{% url 'projects:ranks' project.project_id %}">
+      <svg aria-hidden="true" width="15" height="15"><use href="#rv-i-chart"></use></svg> Open ranks
+    </a>
+    <a class="rv-dropdown__item" href="{% url 'projects:edit' project.project_id %}">
+      <svg aria-hidden="true" width="15" height="15"><use href="#rv-i-edit"></use></svg> Edit project
+    </a>
+    <div class="rv-dropdown__divider"></div>
+    <form method="post" action="{% url 'projects:archive' project.project_id %}"
+          onsubmit="return confirm('Archive {{ project.name|escapejs }}? Ranking history is preserved.')">
+      {% csrf_token %}
+      <button type="submit" class="rv-dropdown__item rv-dropdown__item--danger">
+        <svg aria-hidden="true" width="15" height="15"><use href="#rv-i-trash"></use></svg> Archive project
+      </button>
+    </form>
+  </div>
+</div>

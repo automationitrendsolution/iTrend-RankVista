@@ -1,0 +1,40 @@
+{% load rv %}
+{% comment %}Interval toggle and date-range preset picker, both URL-driven.{% endcomment %}
+<div class="rv-segment" role="group" aria-label="Reporting interval">
+  {% for option in intervals %}
+    <a href="{% qs interval=option page=1 %}" class="{% if window.interval == option %}is-active{% endif %}">
+      {{ option|title }}
+    </a>
+  {% endfor %}
+</div>
+
+<div class="rv-dropdown">
+  <button type="button" class="rv-btn" data-rv-dropdown aria-haspopup="true" aria-expanded="false">
+    <svg aria-hidden="true"><use href="#rv-i-calendar"></use></svg>
+    <span class="rv-badge">{{ window.preset }}</span>
+    <span>{{ window_label }}</span>
+    <svg aria-hidden="true"><use href="#rv-i-chevron-down"></use></svg>
+  </button>
+  <div class="rv-dropdown__menu" style="min-width:270px;padding:8px">
+    {% for preset in range_presets %}
+      {% if preset.days %}
+        <a class="rv-dropdown__item {% if window.preset == preset.key %}is-active{% endif %}"
+           href="{% qs range=preset.key start=None end=None page=1 %}">
+          {{ preset.label }} <span style="margin-left:auto;color:var(--rv-text-subtle);font-size:12px">{{ preset.days }} days</span>
+        </a>
+      {% endif %}
+    {% endfor %}
+    <div class="rv-dropdown__divider"></div>
+    <form method="get" style="padding:6px 4px 2px;display:grid;gap:8px">
+      {% for key, value in request.GET.items %}
+        {% if key != 'start' and key != 'end' and key != 'range' and key != 'page' %}
+          <input type="hidden" name="{{ key }}" value="{{ value }}">
+        {% endif %}
+      {% endfor %}
+      <label class="rv-field__label" style="margin:0">Custom range</label>
+      <input type="date" class="rv-input" name="start" value="{{ window.start|date:'Y-m-d' }}" aria-label="Start date">
+      <input type="date" class="rv-input" name="end" value="{{ window.end|date:'Y-m-d' }}" aria-label="End date">
+      <button type="submit" class="rv-btn rv-btn--primary rv-btn--sm">Apply range</button>
+    </form>
+  </div>
+</div>

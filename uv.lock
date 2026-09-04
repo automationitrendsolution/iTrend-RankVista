@@ -116,6 +116,19 @@ wheels = [
 ]
 
 [[package]]
+name = "django-mongodb-backend"
+version = "5.2.4"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "django" },
+    { name = "pymongo" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/42/7a/057dd454774a62d3e5a6b5b9e82f9c1164028357bf28a4af12ec66293d2a/django_mongodb_backend-5.2.4.tar.gz", hash = "sha256:0f8128879e000aea1afd336cc7540eb1960e44f7c01489c719d052ea45600e90", size = 187461, upload-time = "2026-08-24T16:05:12.036Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/ad/7c/79eb7855dfe738869c3fc5fad857fa502f2d065a94811075402e17abf349/django_mongodb_backend-5.2.4-py3-none-any.whl", hash = "sha256:cad2b72e06d286fb6d5d2b32b343a8f0fecad24aa7733b265c805fb2ebaceaec", size = 107740, upload-time = "2026-08-24T16:05:10.469Z" },
+]
+
+[[package]]
 name = "dnspython"
 version = "2.8.0"
 source = { registry = "https://pypi.org/simple" }
@@ -149,8 +162,10 @@ source = { virtual = "." }
 dependencies = [
     { name = "django" },
     { name = "django-htmx" },
+    { name = "django-mongodb-backend" },
     { name = "gunicorn", marker = "sys_platform != 'win32'" },
     { name = "pymongo" },
+    { name = "pymysql" },
     { name = "python-dotenv" },
     { name = "redis" },
     { name = "waitress", marker = "sys_platform == 'win32'" },
@@ -177,8 +192,10 @@ dev = [
 requires-dist = [
     { name = "django", specifier = ">=5.1,<5.3" },
     { name = "django-htmx", specifier = ">=1.19" },
+    { name = "django-mongodb-backend", specifier = ">=5.2,<5.3" },
     { name = "gunicorn", marker = "sys_platform != 'win32'", specifier = ">=23.0" },
     { name = "pymongo", specifier = ">=4.9" },
+    { name = "pymysql", specifier = ">=1.2.0" },
     { name = "pytest", marker = "extra == 'dev'", specifier = ">=8.3" },
     { name = "pytest-cov", marker = "extra == 'dev'", specifier = ">=5.0" },
     { name = "pytest-django", marker = "extra == 'dev'", specifier = ">=4.9" },
@@ -264,6 +281,15 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/e7/25/a317ab554f604ce30fa778af82264627a7784c4a750c3d8459589f751cf4/pymongo-4.18.0-cp313-cp313-win32.whl", hash = "sha256:f15feb666fa56a43e4b318471eff7fba6facbfc3b2555185a0fef871f6b9ccf1", size = 814841, upload-time = "2026-09-03T15:59:56.657Z" },
     { url = "https://files.pythonhosted.org/packages/6e/58/a2a4b209a3066db88d82c9b44e5b75286aa5a00172dbca357af20bb8b1e4/pymongo-4.18.0-cp313-cp313-win_amd64.whl", hash = "sha256:a2d96ad52eca16939564cbae9c91ffa92a9705ad46cb8d5de26b95dba0d40793", size = 820431, upload-time = "2026-09-03T15:59:58.745Z" },
     { url = "https://files.pythonhosted.org/packages/d5/fa/8cd86494c9001f8e5331f51384b187962696bac3188fcbe05f7edf8dceed/pymongo-4.18.0-cp313-cp313-win_arm64.whl", hash = "sha256:b230196ea62fc4542d9d6b78ddd9dbf0c9437ac2fde5810f7305377ae50fed11", size = 815328, upload-time = "2026-09-03T16:00:01.029Z" },
+]
+
+[[package]]
+name = "pymysql"
+version = "1.2.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/c9/bc/1c6a92f385940f727daeecf3bacaf186e03875dff57197801046c583bcf0/pymysql-1.2.0.tar.gz", hash = "sha256:6c7b17ca686988104d7426c27895b455cdeea3e9d3ceb1270f0c3704fead8c33", size = 49021, upload-time = "2026-05-19T08:26:22.302Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/c4/bd/2534e130295c8cfd4f0a2e31623baab7502278f1e97bcfe61db75656a77f/pymysql-1.2.0-py3-none-any.whl", hash = "sha256:62169ce6d5510f08e140c5e7990ee884a9764024e4a9a27b2cc11f1099322ae0", size = 45716, upload-time = "2026-05-19T08:26:20.974Z" },
 ]
 
 [[package]]

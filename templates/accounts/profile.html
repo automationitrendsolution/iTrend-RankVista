@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+
+{% block title %}Profile - {{ BRAND.NAME }}{% endblock %}
+
+{% block header %}
+<nav class="rv-breadcrumb" aria-label="Breadcrumb"><span>Profile</span></nav>
+{% endblock %}
+
+{% block content %}
+<div class="rv-page-head"><h1>Profile</h1></div>
+
+<div style="display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(330px,1fr));max-width:960px">
+  <div class="rv-card">
+    <div class="rv-card__header"><h2>Account details</h2></div>
+    <form method="post" novalidate data-rv-loading>
+      {% csrf_token %}
+      <div class="rv-card__body">
+        <div style="display:flex;align-items:center;gap:11px;margin-bottom:18px">
+          <span class="rv-avatar" style="width:40px;height:40px;font-size:14px">{{ request.user.initials }}</span>
+          <div>
+            <div style="font-weight:600">{{ request.user.email }}</div>
+            <span class="rv-badge rv-badge--accent">{{ request.user.get_role_display }}</span>
+          </div>
+        </div>
+
+        {% for field in form %}
+          <div class="rv-field">
+            <label class="rv-field__label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+            {{ field }}
+            {% if field.errors %}<div class="rv-field__error">{{ field.errors.0 }}</div>{% endif %}
+          </div>
+        {% endfor %}
+      </div>
+      <div class="rv-modal__footer" style="border-radius:0 0 var(--rv-radius-lg) var(--rv-radius-lg)">
+        <button type="submit" class="rv-btn rv-btn--primary">Save profile</button>
+      </div>
+    </form>
+  </div>
+
+  <div class="rv-card">
+    <div class="rv-card__header"><h2>Change password</h2></div>
+    <form method="post" novalidate data-rv-loading>
+      {% csrf_token %}
+      <input type="hidden" name="form" value="password">
+      <div class="rv-card__body">
+        {% if password_form.non_field_errors %}
+          <div class="rv-auth__alert" role="alert">
+            <svg aria-hidden="true"><use href="#rv-i-alert"></use></svg>
+            <div>{{ password_form.non_field_errors.0 }}</div>
+          </div>
+        {% endif %}
+        {% for field in password_form %}
+          <div class="rv-field">
+            <label class="rv-field__label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+            <div class="rv-password">
+              {{ field }}
+              <button type="button" class="rv-password__toggle" data-rv-password-toggle aria-label="Show password">
+                <svg aria-hidden="true" data-eye-open width="16" height="16"><use href="#rv-i-eye"></use></svg>
+                <svg aria-hidden="true" data-eye-closed width="16" height="16" style="display:none"><use href="#rv-i-eye-off"></use></svg>
+              </button>
+            </div>
+            {% if field.errors %}<div class="rv-field__error">{{ field.errors.0 }}</div>{% endif %}
+          </div>
+        {% endfor %}
+      </div>
+      <div class="rv-modal__footer" style="border-radius:0 0 var(--rv-radius-lg) var(--rv-radius-lg)">
+        <button type="submit" class="rv-btn rv-btn--primary">Update password</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

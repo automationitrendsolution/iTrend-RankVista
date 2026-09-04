@@ -1,0 +1,60 @@
+{% load rv humanize %}
+<div class="rv-table-wrap">
+  {% if page_obj.is_empty %}
+    <div class="rv-empty">
+      <div class="rv-empty__icon"><svg aria-hidden="true" width="22" height="22"><use href="#rv-i-empty"></use></svg></div>
+      <h3>No keywords found</h3>
+      <p>{% if search %}No keyword matches "{{ search }}" for this ASIN.{% else %}This ASIN has no tracked keywords yet.{% endif %}</p>
+      {% if has_filters %}
+        <a class="rv-btn" href="{% url 'projects:keywords' project.project_id %}?asin={{ selected_asin }}">Clear filters</a>
+      {% endif %}
+    </div>
+  {% else %}
+    <div class="rv-scroll">
+      <table class="rv-table">
+        <thead>
+          <tr>
+            <th scope="col" style="width:38px">
+              <input type="checkbox" class="rv-check" data-rv-select-all aria-label="Select all keywords">
+            </th>
+            <th scope="col">Keyword ({{ page_obj.total|intcomma }})</th>
+            <th scope="col" class="rv-num">Search volume</th>
+            <th scope="col" class="rv-num">KW Sales <span class="rv-badge" style="font-size:9px">L4W</span></th>
+            <th scope="col" class="rv-num">Sales Trend <span class="rv-badge" style="font-size:9px">L4W</span></th>
+            <th scope="col" class="rv-num">KW Conv. <span class="rv-badge" style="font-size:9px">L4W</span></th>
+            <th scope="col" class="rv-num">Current rank</th>
+            <th scope="col" class="rv-num">Best rank</th>
+            <th scope="col">Tracking</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in page_obj.items %}
+          <tr>
+            <td>
+              <input type="checkbox" class="rv-check" data-rv-select-row value="{{ row.keyword_lower }}"
+                     aria-label="Select {{ row.keyword }}">
+            </td>
+            <th scope="row" style="font-weight:500">
+              <a href="{% url 'projects:keyword_detail' project.project_id row.keyword %}?asin={{ selected_asin }}"
+                 hx-get="{% url 'projects:keyword_detail' project.project_id row.keyword %}?asin={{ selected_asin }}"
+                 hx-target="#rv-modal-root" style="color:var(--rv-text)">{{ row.keyword }}</a>
+            </th>
+            <td class="rv-num">{{ row.search_volume|default:0|intcomma }}</td>
+            <td class="rv-num">{{ row.kw_sales|default:0|intcomma }}</td>
+            <td class="rv-num {{ row.sales_trend_pct|trend_class }}">{{ row.sales_trend_pct|default:0|floatformat:1 }}%</td>
+            <td class="rv-num">{{ row.conversion_pct|default:0|floatformat:1 }}%</td>
+            <td class="rv-num">{{ row.current_rank|rank_display }}</td>
+            <td class="rv-num">{{ row.best_rank|rank_display }}</td>
+            <td>
+              <span class="rv-badge {% if row.is_tracked %}rv-badge--success{% endif %}">
+                {% if row.is_tracked %}Tracked{% else %}Paused{% endif %}
+              </span>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% include "partials/pagination.html" with target="#rv-keyword-results" %}
+  {% endif %}
+</div>

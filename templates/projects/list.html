@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% load rv %}
+
+{% block title %}Projects - {{ BRAND.NAME }}{% endblock %}
+
+{% block header %}
+<nav class="rv-breadcrumb" aria-label="Breadcrumb"><span>Projects</span></nav>
+{% endblock %}
+
+{% block content %}
+<div class="rv-page-head">
+  <h1>Projects</h1>
+  <div class="rv-counters">
+    <span class="rv-counter"><strong>{{ counters.projects }}</strong> <span>Projects</span></span>
+    <span class="rv-counter"><strong>{{ counters.asins }}</strong> <span>ASINs</span></span>
+    <span class="rv-counter"><strong>{{ counters.keywords }}</strong> <span>Keywords</span></span>
+  </div>
+</div>
+
+<form class="rv-toolbar" method="get" action="{% url 'projects:list' %}" role="search"
+      hx-get="{% url 'projects:list' %}" hx-target="#rv-project-results" hx-push-url="true"
+      hx-trigger="submit, input from:#rv-project-search delay:350ms, change from:select">
+  <div class="rv-search">
+    <svg aria-hidden="true"><use href="#rv-i-search"></use></svg>
+    <input type="search" class="rv-input" id="rv-project-search" name="q" value="{{ search }}"
+           placeholder="Search projects by name or ASIN" aria-label="Search projects" autocomplete="off">
+  </div>
+
+  <a class="rv-btn rv-btn--primary" href="{% url 'projects:create' %}">
+    <svg aria-hidden="true"><use href="#rv-i-plus"></use></svg> Create Project
+  </a>
+
+  <div class="rv-toolbar__spacer"></div>
+
+  <select class="rv-select" name="marketplace" aria-label="Filter by marketplace" style="width:auto">
+    <option value="">All marketplaces</option>
+    {% for code in marketplaces %}
+      <option value="{{ code }}" {% if code == selected_marketplace %}selected{% endif %}>{{ code|marketplace_label }}</option>
+    {% endfor %}
+  </select>
+
+  <select class="rv-select" name="sort" aria-label="Sort projects" style="width:auto">
+    {% for option in sort_options %}
+      <option value="{{ option.key }}" {% if option.key == sort %}selected{% endif %}>{{ option.label }}</option>
+    {% endfor %}
+  </select>
+
+  <div class="rv-segment" role="group" aria-label="View mode">
+    <a href="{% qs view='grid' %}" class="{% if view_mode == 'grid' %}is-active{% endif %}" aria-label="Grid view">
+      <svg aria-hidden="true"><use href="#rv-i-grid"></use></svg>
+    </a>
+    <a href="{% qs view='list' %}" class="{% if view_mode == 'list' %}is-active{% endif %}" aria-label="List view">
+      <svg aria-hidden="true"><use href="#rv-i-list"></use></svg>
+    </a>
+  </div>
+
+  <input type="hidden" name="view" value="{{ view_mode }}">
+  <input type="hidden" name="size" value="{{ page_obj.size }}">
+</form>
+
+<div id="rv-project-results">
+  {% include "projects/partials/project_results.html" %}
+</div>
+{% endblock %}

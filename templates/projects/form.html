@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+
+{% block title %}{% if mode == 'edit' %}Edit project{% else %}Create project{% endif %} - {{ BRAND.NAME }}{% endblock %}
+
+{% block header %}
+<nav class="rv-breadcrumb" aria-label="Breadcrumb"><a href="{% url 'projects:list' %}">Projects</a><span aria-hidden="true">/</span><span>{% if mode == 'edit' %}Edit{% else %}New project{% endif %}</span></nav>
+{% endblock %}
+
+{% block content %}
+<div class="rv-page-head">
+  <div style="display:flex;align-items:center;gap:10px">
+    <a class="rv-btn rv-btn--ghost rv-btn--icon"
+       href="{% if mode == 'edit' %}{% url 'projects:detail' project.project_id %}{% else %}{% url 'projects:list' %}{% endif %}"
+       aria-label="Back">
+      <svg aria-hidden="true"><use href="#rv-i-back"></use></svg>
+    </a>
+    <h1>{% if mode == 'edit' %}Edit project{% else %}Create project{% endif %}</h1>
+  </div>
+</div>
+
+<div class="rv-card" style="max-width:620px">
+  <form method="post" novalidate data-rv-loading
+        action="{% if mode == 'edit' %}{% url 'projects:edit' project.project_id %}{% else %}{% url 'projects:create' %}{% endif %}">
+    {% csrf_token %}
+    <div class="rv-card__body">
+      {% if form.non_field_errors %}
+        <div class="rv-auth__alert" role="alert">
+          <svg aria-hidden="true"><use href="#rv-i-alert"></use></svg>
+          <div>{{ form.non_field_errors.0 }}</div>
+        </div>
+      {% endif %}
+
+      {% for field in form %}
+        <div class="rv-field">
+          <label class="rv-field__label" for="{{ field.id_for_label }}">
+            {{ field.label }}{% if field.field.required %} <span style="color:var(--rv-danger)">*</span>{% endif %}
+          </label>
+          {{ field }}
+          {% if field.errors %}<div class="rv-field__error">{{ field.errors.0 }}</div>{% endif %}
+          {% if field.name == 'primary_asin' %}
+            <div class="rv-field__hint">The headline ASIN shown on the project card, e.g. B0CF1NXT25.</div>
+          {% elif field.name == 'tags' %}
+            <div class="rv-field__hint">Optional labels used by the project filters. Up to 10.</div>
+          {% endif %}
+        </div>
+      {% endfor %}
+    </div>
+
+    <div class="rv-modal__footer" style="border-radius:0 0 var(--rv-radius-lg) var(--rv-radius-lg)">
+      <a class="rv-btn"
+         href="{% if mode == 'edit' %}{% url 'projects:detail' project.project_id %}{% else %}{% url 'projects:list' %}{% endif %}">Cancel</a>
+      <button type="submit" class="rv-btn rv-btn--primary">
+        {% if mode == 'edit' %}Save changes{% else %}Create project{% endif %}
+      </button>
+    </div>
+  </form>
+</div>
+{% endblock %}

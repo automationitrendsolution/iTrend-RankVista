@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% load rv %}
+
+{% block title %}{{ project.name }} - Trends - {{ BRAND.NAME }}{% endblock %}
+
+{% block header %}
+<nav class="rv-breadcrumb" aria-label="Breadcrumb"><a href="{% url 'projects:list' %}">Projects</a><span aria-hidden="true">/</span><span class="rv-truncate">{{ project.name }}</span><span aria-hidden="true">/</span><span>Trends</span></nav>
+{% endblock %}
+
+{% block content %}
+{% include "projects/partials/project_header.html" %}
+
+<div class="rv-toolbar">
+  {% include "projects/partials/asin_selector.html" %}
+  <div class="rv-toolbar__spacer"></div>
+  {% include "projects/partials/date_controls.html" %}
+</div>
+
+{% if not selected_asin or not overview %}
+  <div class="rv-table-wrap">
+    <div class="rv-empty">
+      <div class="rv-empty__icon"><svg aria-hidden="true" width="22" height="22"><use href="#rv-i-trend"></use></svg></div>
+      <h3>No trend data</h3>
+      <p>Select an ASIN with ranking history to see how its search performance moves over time.</p>
+    </div>
+  </div>
+{% else %}
+  {% include "projects/partials/rank_overview.html" %}
+  <div id="rv-trend-results">
+    {% include "projects/partials/trend_panels.html" %}
+  </div>
+{% endif %}
+{% endblock %}

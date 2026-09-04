@@ -1,43 +1,67 @@
-"""Project data access. Every query is projected, indexed and paginated in Mongo."""
+"""Project data access over the live warehouse, merged with the MongoDB overlay.
+Projects are derived from the ASIN registry; names, tags and status come from the overlay."""
 
 from __future__ import annotations
 
 import logging
-import re
-from datetime import datetime, timezone
 from typing import Any
 
-from pymongo import ReturnDocument
-from pymongo.errors import DuplicateKeyError, PyMongoError
-
-from apps.common.constants import DEFAULT_PROJECT_SORT, PROJECT_SORT_OPTIONS
-from apps.common.mongo import MongoUnavailable, get_collection
-from apps.common.schema import ASINS, KEYWORDS, PROJECTS, RANKINGS
+from apps.common import sourcedb
+from apps.common.cache import cache_delete, cached_call
+from apps.common.constants import CACHE_TTL_LONG, CACHE_TTL_MEDIUM, DEFAULT_PROJECT_SORT
+from apps.projects import overlay
 
 logger = logging.getLogger("rankvista.projects")
 
-CARD_PROJECTION = {
-    "_id": 0,
-    "project_id": 1,
-    "name": 1,
-    "marketplace": 1,
-    "primary_asin": 1,
-    "image_url": 1,
-    "asin_count": 1,
-    "keyword_count": 1,
-    "status": 1,
-    "tags": 1,
-    "created_at": 1,
-    "updated_at": 1,
-    "last_opened_at": 1,
+MongoUnavailable = sourcedb.SourceUnavailable
+
+CACHE_KEY_ROSTER = "rv:proj:roster:v2"
+CACHE_KEY_USAGE = "rv:usage:counts:v2"
+
+SORT_KEYS: dict[str, Any] = {
+    "last_opened": lambda p: p["last_opened_at"] or p["created_at"],
+    "recent": lambda p: p["created_at"],
+    "name_asc": lambda p: p["name"].lower(),
+    "name_desc": lambda p: p["name"].lower(),
+    "asins_desc": lambda p: p["asin_count"],
+    "keywords_desc": lambda p: p["keyword_count"],
 }
+DESCENDING = {"last_opened", "recent", "name_desc", "asins_desc", "keywords_desc"}
 
-SORT_BY_KEY = {option["key"]: option for option in PROJECT_SORT_OPTIONS}
+# One row per project: ASIN counts from the registry, keyword counts from the summary.
+ROSTER_SQL = """
+    SELECT p.*, COALESCE(k.keyword_count, 0) AS keyword_count
+    FROM (
+        SELECT r.project_id,
+               COUNT(DISTINCT r.asin) AS asin_count,
+               MIN(r.first_seen_at) AS first_seen_at,
+               SUBSTRING_INDEX(
+                   GROUP_CONCAT(r.asin ORDER BY r.is_primary DESC, r.asin), ',', 1
+               ) AS primary_asin,
+               SUBSTRING_INDEX(
+                   GROUP_CONCAT(r.title ORDER BY r.is_primary DESC, r.asin SEPARATOR '||'), '||', 1
+               ) AS display_name,
+               SUBSTRING_INDEX(
+                   GROUP_CONCAT(r.brand ORDER BY r.is_primary DESC, r.asin SEPARATOR '||'), '||', 1
+               ) AS brand
+        FROM {asins} r
+        GROUP BY r.project_id
+    ) p
+    LEFT JOIN (
+        SELECT project_id, COUNT(DISTINCT keyword) AS keyword_count
+        FROM {keywords} GROUP BY project_id
+    ) k ON k.project_id = p.project_id
+"""
 
 
-def _sort_spec(sort_key: str) -> list[tuple[str, int]]:
-    option = SORT_BY_KEY.get(sort_key, SORT_BY_KEY[DEFAULT_PROJECT_SORT])
-    return [(option["field"], option["direction"]), ("project_id", -1)]
+def _roster() -> list[dict[str, Any]]:
+    """Every project the warehouse knows about. Around a hundred rows, so cached whole."""
+
+    def produce() -> list[dict[str, Any]]:
+        sql = ROSTER_SQL.format(asins=sourcedb.table("asins"), keywords=sourcedb.table("keywords"))
+        return sourcedb.fetch_all(sql)
+
+    return cached_call(CACHE_KEY_ROSTER, CACHE_TTL_LONG, produce)
 
 
 def build_filter(
@@ -49,27 +73,66 @@ def build_filter(
     min_asins: int | None = None,
     min_keywords: int | None = None,
 ) -> dict[str, Any]:
-    """Translate UI filters into an indexed Mongo query document."""
-    query: dict[str, Any] = {}
+    """Filter descriptor consumed by list_projects. A dict keeps the view signature stable."""
+    return {
+        "search": (search or "").strip().lower(),
+        "marketplace": (marketplace or "").upper(),
+        "status": status or "",
+        "min_asins": min_asins,
+        "min_keywords": min_keywords,
+    }
+
+
+def _decorate(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Merge overlay metadata over the rows derived from the warehouse."""
+    overlays = overlay.get_many([str(row["project_id"]) for row in rows])
+    decorated = []
+    for row in rows:
+        project_id = str(row["project_id"])
+        patch = overlays.get(project_id, {})
+        decorated.append(
+            {
+                "project_id": project_id,
+                "name": patch.get("name") or row.get("display_name") or f"Project {project_id}",
+                "marketplace": patch.get("marketplace") or "US",
+                "primary_asin": patch.get("primary_asin") or row.get("primary_asin") or "",
+                "image_url": patch.get("image_url") or "",
+                "brand": row.get("brand") or "",
+                "asin_count": int(row.get("asin_count") or 0),
+                "keyword_count": int(row.get("keyword_count") or 0),
+                "status": patch.get("status") or "active",
+                "tags": patch.get("tags") or [],
+                "created_at": row.get("first_seen_at"),
+                "updated_at": patch.get("updated_at"),
+                "last_opened_at": patch.get("last_opened_at"),
+            }
+        )
+    return decorated
+
+
+def _matches(project: dict[str, Any], query: dict[str, Any]) -> bool:
+    search = query.get("search")
+    if search and not (
+        search in project["name"].lower()
+        or search in project["primary_asin"].lower()
+        or search in project["project_id"]
+    ):
+        return False
+    if query.get("marketplace") and project["marketplace"] != query["marketplace"]:
+        return False
+
+    status = query.get("status")
     if status:
-        query["status"] = status
-    else:
-        query["status"] = {"$ne": "archived"}
-    if marketplace:
-        query["marketplace"] = marketplace.upper()
-    if owner_id is not None:
-        query["owner_id"] = owner_id
-    if search:
-        escaped = re.escape(search.strip())
-        query["$or"] = [
-            {"name_lower": {"$regex": escaped.lower()}},
-            {"primary_asin": {"$regex": escaped, "$options": "i"}},
-        ]
-    if min_asins:
-        query["asin_count"] = {"$gte": min_asins}
-    if min_keywords:
-        query["keyword_count"] = {"$gte": min_keywords}
-    return query
+        if project["status"] != status:
+            return False
+    elif project["status"] == "archived":
+        return False
+
+    if query.get("min_asins") and project["asin_count"] < query["min_asins"]:
+        return False
+    if query.get("min_keywords") and project["keyword_count"] < query["min_keywords"]:
+        return False
+    return True
 
 
 def list_projects(
@@ -79,157 +142,105 @@ def list_projects(
     offset: int = 0,
     limit: int = 25,
 ) -> tuple[list[dict[str, Any]], int]:
-    """Return one page of project cards plus the total match count."""
-    try:
-        collection = get_collection(PROJECTS)
-        total = collection.count_documents(query)
-        cursor = (
-            collection.find(query, CARD_PROJECTION)
-            .sort(_sort_spec(sort))
-            .skip(offset)
-            .limit(limit)
-        )
-        return list(cursor), total
-    except PyMongoError as exc:
-        logger.error("Project listing failed: %s", type(exc).__name__)
-        raise MongoUnavailable("Projects could not be loaded.") from exc
+    """One page of project cards plus the total match count.
+    Filtering precedes pagination, so the count always matches what is listed."""
+    projects = [p for p in _decorate(_roster()) if _matches(p, query)]
+
+    key = SORT_KEYS.get(sort, SORT_KEYS[DEFAULT_PROJECT_SORT])
+    projects.sort(key=lambda p: (key(p) is None, key(p) or 0, p["project_id"]),
+                  reverse=sort in DESCENDING)
+
+    return projects[offset : offset + limit], len(projects)
 
 
-def get_project(project_id: int) -> dict[str, Any] | None:
-    try:
-        return get_collection(PROJECTS).find_one({"project_id": project_id}, {"_id": 0})
-    except PyMongoError as exc:
-        logger.error("Project fetch failed: %s", type(exc).__name__)
-        raise MongoUnavailable("Project could not be loaded.") from exc
+def get_project(project_id: str | int) -> dict[str, Any] | None:
+    project_id = str(project_id)
+    for row in _roster():
+        if str(row["project_id"]) == project_id:
+            return _decorate([row])[0]
+    return None
 
 
 def usage_counts(owner_id: int | None = None) -> dict[str, int]:
     """Header counters: projects, ASINs and keywords currently tracked."""
-    scope: dict[str, Any] = {} if owner_id is None else {"owner_id": owner_id}
-    try:
-        projects = get_collection(PROJECTS)
-        pipeline = [
-            {"$match": {**scope, "status": {"$ne": "archived"}}},
-            {
-                "$group": {
-                    "_id": None,
-                    "projects": {"$sum": 1},
-                    "asins": {"$sum": {"$ifNull": ["$asin_count", 0]}},
-                    "keywords": {"$sum": {"$ifNull": ["$keyword_count", 0]}},
-                }
-            },
-        ]
-        result = list(projects.aggregate(pipeline))
-        if not result:
-            return {"projects": 0, "asins": 0, "keywords": 0}
-        row = result[0]
+
+    def produce() -> dict[str, int]:
+        asins = sourcedb.table("asins")
+        keywords = sourcedb.table("keywords")
+        counts = sourcedb.fetch_one(
+            f"SELECT COUNT(DISTINCT project_id) AS projects, COUNT(DISTINCT asin) AS asins "
+            f"FROM {asins}"
+        ) or {}
         return {
-            "projects": int(row.get("projects", 0)),
-            "asins": int(row.get("asins", 0)),
-            "keywords": int(row.get("keywords", 0)),
+            "projects": int(counts.get("projects") or 0),
+            "asins": int(counts.get("asins") or 0),
+            "keywords": int(
+                sourcedb.scalar(f"SELECT COUNT(DISTINCT project_id, keyword) FROM {keywords}")
+            ),
         }
-    except PyMongoError as exc:
-        logger.error("Usage aggregation failed: %s", type(exc).__name__)
-        return {"projects": 0, "asins": 0, "keywords": 0}
+
+    return cached_call(CACHE_KEY_USAGE, CACHE_TTL_LONG, produce)
 
 
 def distinct_marketplaces() -> list[str]:
-    try:
-        values = get_collection(PROJECTS).distinct("marketplace")
-        return sorted(v for v in values if v)
-    except PyMongoError:
-        return []
+    """Marketplace is an overlay concept; the warehouse tracks a single market."""
+    return sorted({p["marketplace"] for p in _decorate(_roster())})
 
 
-def next_project_id() -> int:
-    """Allocate the next public project id without a separate counter document."""
-    try:
-        latest = list(
-            get_collection(PROJECTS).find({}, {"project_id": 1}).sort("project_id", -1).limit(1)
-        )
-        return int(latest[0]["project_id"]) + 1 if latest else 10001
-    except (PyMongoError, KeyError, ValueError):
-        return int(datetime.now(timezone.utc).timestamp())
+def next_project_id() -> str:
+    highest = max((int(row["project_id"]) for row in _roster() if str(row["project_id"]).isdigit()),
+                  default=90000)
+    return str(highest + 1)
 
 
 def create_project(data: dict[str, Any]) -> dict[str, Any]:
-    now = datetime.now(timezone.utc)
-    document = {
-        **data,
-        "project_id": data.get("project_id") or next_project_id(),
-        "name_lower": data["name"].lower(),
-        "asin_count": data.get("asin_count", 0),
-        "keyword_count": data.get("keyword_count", 0),
-        "status": data.get("status", "active"),
-        "created_at": now,
-        "updated_at": now,
-        "last_opened_at": now,
+    """Register a project in the overlay. The read-only warehouse is never written to."""
+    project_id = str(data.get("project_id") or next_project_id())
+    document = overlay.upsert(
+        project_id, {**data, "status": data.get("status", "active")}, owner_id=data.get("owner_id")
+    )
+    return {
+        "project_id": project_id,
+        "name": document.get("name", ""),
+        "marketplace": document.get("marketplace", "US"),
+        "primary_asin": document.get("primary_asin", ""),
+        "image_url": document.get("image_url", ""),
+        "tags": document.get("tags", []),
+        "asin_count": 0,
+        "keyword_count": 0,
+        "status": "active",
     }
-    try:
-        get_collection(PROJECTS).insert_one(document)
-    except DuplicateKeyError:
-        document["project_id"] = next_project_id()
-        get_collection(PROJECTS).insert_one(document)
-    except PyMongoError as exc:
-        raise MongoUnavailable("Project could not be created.") from exc
-    document.pop("_id", None)
-    return document
 
 
-def update_project(project_id: int, data: dict[str, Any]) -> dict[str, Any] | None:
-    changes = {**data, "updated_at": datetime.now(timezone.utc)}
-    if "name" in data:
-        changes["name_lower"] = data["name"].lower()
-    try:
-        return get_collection(PROJECTS).find_one_and_update(
-            {"project_id": project_id},
-            {"$set": changes},
-            projection={"_id": 0},
-            return_document=ReturnDocument.AFTER,
-        )
-    except PyMongoError as exc:
-        raise MongoUnavailable("Project could not be updated.") from exc
+def update_project(project_id: str | int, data: dict[str, Any]) -> dict[str, Any] | None:
+    overlay.upsert(str(project_id), data)
+    return get_project(project_id) or {"project_id": str(project_id), **data}
 
 
-def touch_last_opened(project_id: int) -> None:
-    """Record that a project was opened, driving the default sort order."""
-    try:
-        get_collection(PROJECTS).update_one(
-            {"project_id": project_id},
-            {"$set": {"last_opened_at": datetime.now(timezone.utc)}},
-        )
-    except PyMongoError:
-        logger.debug("Could not update last_opened_at for project %s", project_id)
+def touch_last_opened(project_id: str | int) -> None:
+    overlay.touch_last_opened(str(project_id))
 
 
-def archive_project(project_id: int) -> bool:
-    """Soft-archive a project. Ranking history is deliberately preserved."""
-    try:
-        result = get_collection(PROJECTS).update_one(
-            {"project_id": project_id},
-            {"$set": {"status": "archived", "updated_at": datetime.now(timezone.utc)}},
-        )
-        return result.modified_count > 0
-    except PyMongoError as exc:
-        raise MongoUnavailable("Project could not be archived.") from exc
+def archive_project(project_id: str | int) -> bool:
+    overlay.upsert(str(project_id), {"status": "archived"})
+    return True
 
 
-def refresh_counts(project_id: int) -> dict[str, int]:
-    """Recompute the denormalised ASIN and keyword counters for one project."""
-    try:
-        asins = get_collection(ASINS).count_documents({"project_id": project_id})
-        keywords = get_collection(KEYWORDS).count_documents({"project_id": project_id})
-        get_collection(PROJECTS).update_one(
-            {"project_id": project_id},
-            {"$set": {"asin_count": asins, "keyword_count": keywords}},
-        )
-        return {"asin_count": asins, "keyword_count": keywords}
-    except PyMongoError:
+def has_ranking_data(project_id: str | int) -> bool:
+    ranks = sourcedb.table("ranks")
+    row = sourcedb.fetch_one(
+        f"SELECT 1 AS ok FROM {ranks} WHERE project_id = %s LIMIT 1", [str(project_id)]
+    )
+    return row is not None
+
+
+def refresh_counts(project_id: str | int) -> dict[str, int]:
+    project = get_project(project_id)
+    if not project:
         return {"asin_count": 0, "keyword_count": 0}
+    return {"asin_count": project["asin_count"], "keyword_count": project["keyword_count"]}
 
 
-def has_ranking_data(project_id: int) -> bool:
-    try:
-        return get_collection(RANKINGS).find_one({"project_id": project_id}, {"_id": 1}) is not None
-    except PyMongoError:
-        return False
+def invalidate_roster() -> None:
+    """Drop the cached roster after an overlay write changes a project."""
+    cache_delete(CACHE_KEY_ROSTER)
