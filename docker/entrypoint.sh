@@ -46,7 +46,7 @@ log "Collecting static files..."
 python manage.py collectstatic --noinput --clear >/dev/null
 
 log "Bootstrapping administrator (skipped when APP_ADMIN_* is unset)..."
-python manage.py bootstrap_admin --skip-if-missing
+python manage.py bootstrap_admin --skip-if-missing || log "Bootstrap skipped; check APP_ADMIN_* and RANKVISTA_SECRET_KEY."
 
 log "Starting application."
 exec "$@"

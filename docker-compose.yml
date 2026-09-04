@@ -46,11 +46,17 @@ services:
     container_name: rankvista-web
     restart: unless-stopped
     env_file:
-      - .env
+      # .env.key holds RANKVISTA_SECRET_KEY, which decrypts any enc: values in .env.
+      # Compose reads both on the host; neither is baked into the image.
+      - path: .env
+        required: true
+      - path: .env.key
+        required: false
     environment:
-      # Container-network defaults; anything set in .env wins.
-      MONGODB_URI: ${MONGODB_URI:-mongodb://rankvista:rankvista@mongodb:27017/rankvista?authSource=admin}
-      REDIS_URL: ${REDIS_URL:-redis://redis:6379/0}
+      # .env holds host-side URIs (127.0.0.1), which inside a container point at the
+      # container itself. These use service names; override with the _DOCKER vars.
+      MONGODB_URI: ${MONGODB_URI_DOCKER:-mongodb://${MONGO_ROOT_USERNAME:-rankvista}:${MONGO_ROOT_PASSWORD:-rankvista}@mongodb:27017/${MONGODB_DATABASE:-rankvista}?authSource=admin}
+      REDIS_URL: ${REDIS_URL_DOCKER:-redis://redis:6379/0}
     ports:
       # Terminate public traffic at a reverse proxy; the app stays on loopback.
       - "${BIND_HOST:-127.0.0.1}:${WEB_PORT:-8000}:8000"
